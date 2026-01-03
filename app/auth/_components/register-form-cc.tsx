@@ -1,0 +1,84 @@
+"use client";
+
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { authClient } from "@/lib/auth-client";
+import { useState } from "react";
+import { toast } from "sonner";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+
+const RegisterFormCC = () => {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await authClient.signUp.email(
+      {
+        email, // user email address
+        password, // user password -> min 8 characters by default
+        name, // user display name
+        callbackURL: "/profile", // A URL to redirect to after the user verifies their email (optional)
+      },
+      {
+        onRequest: (ctx) => {
+          //show loading
+          setLoading(true);
+        },
+        onSuccess: (ctx) => {
+          //redirect to the profile or sign in page
+          setLoading(false);
+          toast.success("User registered successfully");
+          router.push("/profile");
+        },
+        onError: (ctx) => {
+          // display the error message
+          setLoading(false);
+          toast.error(ctx.error.message);
+        },
+      }
+    );
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+      <Input
+        type="text"
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        placeholder="Name"
+      />
+      <Input
+        type="email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        placeholder="Email"
+      />
+      <Input
+        type="password"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        placeholder="Password"
+      />
+
+      <Button type="submit" disabled={loading}>
+        Register
+      </Button>
+
+      <div className="flex items-center">
+        <p>Already have an account?</p>
+        <Link href="/auth/login">
+          <Button variant="link" size="sm">
+            Login
+          </Button>
+        </Link>
+      </div>
+    </form>
+  );
+};
+
+export default RegisterFormCC;

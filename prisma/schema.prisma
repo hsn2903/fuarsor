@@ -1,0 +1,222 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String?
+  posts         Post[]
+  emailVerified Boolean   @default(false)
+  image         String?
+  address       Json?     @db.Json
+  paymentMethod String?
+  phone         String?
+  role          String?     @default("user")
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  sessions      Session[]
+  accounts      Account[]
+
+  @@map("users")
+}
+
+model Post {
+  id        String  @id @default(cuid())
+  title     String
+  content   String?
+  published Boolean @default(false)
+  authorId  String
+  author    User    @relation(fields: [authorId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("posts")
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([token])
+  @@index([userId])
+  @@map("sessions")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([userId])
+  @@map("accounts")
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
+  @@map("verifications")
+}
+
+
+
+model Fair {
+  id          String   @id @default(uuid())
+  
+  // Basic Info
+  name        String
+  slug        String   @unique
+  description String
+  summary     String?
+  website     String?
+  venue       String?
+
+  type        String?
+  category    String?
+  status      String   @default("Beklemede")
+  tourNote    String?
+
+  // Images (Single URL strings)
+  logoImage   String?
+  bannerImage String?
+
+  // Simple Lists (Stored as arrays of strings)
+  displayedProducts String[]
+  paidServices      String[]
+  freeServices      String[]
+
+  // Booleans
+  displayOnBanner     Boolean @default(false)
+  isFeatured          Boolean @default(false)
+  isPublished         Boolean @default(false)
+  isSectoral          Boolean @default(false)
+  isDefiniteDeparture Boolean @default(false)
+
+  // Dates
+  date      String?  // Text representation (e.g. "2026-01-01")
+  startDate DateTime
+  endDate   DateTime
+
+  // --- RELATIONS (Connecting to Independent Entities) ---
+  
+  // 1. Accommodation (Hotel)
+  hotelId     String?
+  hotel       Hotel?    @relation(fields: [hotelId], references: [id])
+
+  // 2. Image Collections (Galleries)
+  tourGalleryId  String?
+  tourGallery    Gallery? @relation("TourGallery", fields: [tourGalleryId], references: [id])
+
+  venueGalleryId String?
+  venueGallery   Gallery? @relation("VenueGallery", fields: [venueGalleryId], references: [id])
+
+  fairGalleryId  String?
+  fairGallery    Gallery? @relation("FairGallery", fields: [fairGalleryId], references: [id])
+
+  // 3. Complex Nested Data (Tour Packages)
+  packages    TravelPackage[]
+
+    // Timestamps
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// --- 1. INDEPENDENT ENTITIES ---
+
+// A Hotel can exist even if no fairs are using it yet.
+model Hotel {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  imageUrls   String[] // We store a list of Cloudinary URLs
+  
+  // Relation: A hotel can be linked to multiple fairs
+  fairs       Fair[]
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// A generic gallery to store collections of photos (e.g. "Shanghai City Tour")
+model Gallery {
+  id          String   @id @default(uuid())
+  name        String   // e.g. "Shanghai City Views"
+  description String?
+  type        String   @default("GENERAL") // "TOUR", "VENUE", "GENERAL"
+  imageUrls   String[] 
+
+  // Inverse Relations: Tracking which fairs use this gallery
+  tourFairs   Fair[]   @relation("TourGallery")
+  venueFairs  Fair[]   @relation("VenueGallery")
+  fairFairs   Fair[]   @relation("FairGallery") // For general fair images
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// --- 3. NESTED DETAILS ---
+
+model TravelPackage {
+  id             String   @id @default(uuid())
+  name           String   // e.g. "Ekonomik Paket"
+  duration       String?  // e.g. "4 Gece 5 Gün"
+  description    String?  // e.g. "3* Holiday Inn Express"
+  
+  priceSingle    Float?   // One Person Price
+  priceDouble    Float?   // Two Person Price
+  
+  // A package belongs to ONE specific Fair
+  fairId         String
+  fair           Fair     @relation(fields: [fairId], references: [id], onDelete: Cascade)
+
+  // A package has MANY daily activities
+  activities     Activity[]
+}
+
+model Activity {
+  id              String        @id @default(uuid())
+  dayNumber       Int           // e.g. 1, 2, 3
+  description     String        // e.g. "Meeting at airport"
+
+  // An activity belongs to ONE specific Package
+  packageId       String
+  travelPackage   TravelPackage @relation(fields: [packageId], references: [id], onDelete: Cascade)
+}
