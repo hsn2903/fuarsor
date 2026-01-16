@@ -16,40 +16,40 @@ import ImageGalleryButton from "./_components/image-gallery-button";
 import SectionTitle from "./_components/section-title";
 import ContactForm from "@/components/shared/contact-form";
 
-export const generateMetadata = async ({
-  params,
-}: {
-  params: Promise<{ slug: string }>;
-}) => {
-  const fairSlug = (await params).slug;
+// export const generateMetadata = async ({
+//   params,
+// }: {
+//   params: Promise<{ slug: string }>;
+// }) => {
+//   const fairSlug = (await params).slug;
 
-  const fair = await prisma.fair.findFirst({
-    where: { slug: fairSlug },
-  });
+//   const fair = await prisma.fair.findFirst({
+//     where: { slug: fairSlug },
+//   });
 
-  return {
-    title: fair?.name,
-    // Join the array into a string for the meta description
-    description: fair?.products ? fair.products.join(", ") : fair?.description,
-    openGraph: {
-      title: fair?.name,
-      description: fair?.description,
-      images: fair?.logoUrl ? [fair.logoUrl] : [],
-    },
-  };
-};
+//   return {
+//     title: fair?.name,
+//     // Join the array into a string for the meta description
+//     description: fair?.products ? fair.products.join(", ") : fair?.description,
+//     openGraph: {
+//       title: fair?.name,
+//       description: fair?.description,
+//       images: fair?.logoUrl ? [fair.logoUrl] : [],
+//     },
+//   };
+// };
 
-export const generateStaticParams = async ({
-  params,
-}: {
-  params: Promise<{ slug: string }>;
-}) => {
-  const fairs = await getAllFairs();
+// export const generateStaticParams = async ({
+//   params,
+// }: {
+//   params: Promise<{ slug: string }>;
+// }) => {
+//   const fairs = await getAllFairs();
 
-  return fairs.map((fair) => ({
-    slug: fair.slug,
-  }));
-};
+//   return fairs.map((fair) => ({
+//     slug: fair.slug,
+//   }));
+// };
 
 const FuarDetayPage = async ({
   params,
