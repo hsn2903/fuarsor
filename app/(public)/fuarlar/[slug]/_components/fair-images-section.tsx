@@ -2,10 +2,8 @@
 "use client";
 
 import React, { useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
 import Lightbox from "yet-another-react-lightbox";
 import "yet-another-react-lightbox/styles.css";
-import { FairImages } from "@/lib/generated/prisma";
 import Image from "next/image";
 import SectionTitle from "./section-title";
 
