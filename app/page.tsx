@@ -18,12 +18,10 @@ import {
 import Link from "next/link";
 import { Suspense } from "react";
 import { Footer } from "react-day-picker";
-import { getFeaturedFairs } from "./_actions/fairs";
 
 export default async function Home() {
   const users = await prisma.user.findMany();
   const posts = await prisma.post.findMany();
-  const featuredFairs = await getFeaturedFairs();
 
   return (
     <div>
