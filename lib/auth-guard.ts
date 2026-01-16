@@ -7,3 +7,10 @@ export async function getCurrentUser() {
   });
   return session?.user;
 }
+
+export async function requireAdmin() {
+  const user = await getCurrentUser();
+  if (!user || !user.role || user.role !== "ADMIN") {
+    throw new Error("Unauthorized");
+  }
+}
