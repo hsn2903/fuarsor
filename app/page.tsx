@@ -18,8 +18,10 @@ import {
 import Link from "next/link";
 import { Suspense } from "react";
 import { Footer } from "react-day-picker";
+import { connection } from "next/server";
 
 export default async function Home() {
+  await connection();
   const users = await prisma.user.findMany();
   const posts = await prisma.post.findMany();
 
@@ -27,9 +29,13 @@ export default async function Home() {
     <div>
       <HeroSection />
       <CampaignsSection />
-      <DefiniteDepartureTours />
+      <Suspense fallback={<p>Yükleniyor...</p>}>
+        <DefiniteDepartureTours />
+      </Suspense>
       <AboutSection />
-      <FeaturedFairs />
+      <Suspense fallback={<p>Yükleniyor...</p>}>
+        <FeaturedFairs />
+      </Suspense>
 
       <Suspense fallback={<p>Yükleniyor...</p>}>
         <PostsSection posts={posts} />
