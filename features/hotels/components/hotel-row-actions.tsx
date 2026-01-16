@@ -1,9 +1,11 @@
 "use client";
 
 import { useTransition } from "react";
-import { deleteHotelAction } from "@/features/hotels/actions"; // From Ch 7
+import Link from "next/link";
+import { deleteHotelAction } from "@/features/hotels/actions";
 import { Button } from "@/components/ui/button";
-import { Trash2 } from "lucide-react";
+import { Trash2, Pencil } from "lucide-react";
+import { toast } from "sonner";
 
 export default function HotelRowActions({ id }: { id: string }) {
   const [isPending, startTransition] = useTransition();
@@ -17,14 +19,22 @@ export default function HotelRowActions({ id }: { id: string }) {
       startTransition(async () => {
         const result = await deleteHotelAction(id);
         if (result?.error) {
-          alert(result.error); // Show error if hotel is in use
+          toast.error(result.error);
+        } else {
+          toast.success("Otel silindi.");
         }
       });
     }
   };
 
   return (
-    <div className="flex justify-end">
+    <div className="flex justify-end gap-2">
+      <Link href={`/admin/hotels/${id}/edit`}>
+        <Button variant="ghost" size="icon" title="Düzenle">
+          <Pencil className="h-4 w-4 text-slate-500 hover:text-blue-600" />
+        </Button>
+      </Link>
+
       <Button
         variant="ghost"
         size="icon"

@@ -17,33 +17,45 @@ model User {
   id            String    @id @default(cuid())
   email         String    @unique
   name          String?
-  posts         Post[]
+  // posts         Post[]
   emailVerified Boolean   @default(false)
   image         String?
-  address       Json?     @db.Json
   paymentMethod String?
   phone         String?
-  role          String?     @default("user")
+  role          String    @default("USER") // USER, ADMIN, EDITOR
+  banned        Boolean   @default(false)
+  banReason     String?
+  banExpires    DateTime?
 
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  // Custom E-commerce Fields
+  phoneNumber String?
+  address     String? @db.Text
 
-  sessions      Session[]
-  accounts      Account[]
+  // --- NEW FIELDS ---
+  bio      String? @db.Text
+  jobTitle String?
+  website  String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  sessions Session[]
+  accounts Account[]
 
   @@map("users")
 }
 
 model Post {
-  id        String  @id @default(cuid())
-  title     String
-  content   String?
-  published Boolean @default(false)
-  authorId  String
-  author    User    @relation(fields: [authorId], references: [id])
+  id         String  @id @default(cuid())
+  title      String
+  slug       String  @unique
+  content    String?
+  coverImage String?
+  published  Boolean @default(false)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  category  String?  @default("Diğer")
 
   @@map("posts")
 }
@@ -96,127 +108,147 @@ model Verification {
   @@map("verifications")
 }
 
+// --- 1. INDEPENDENT LIBRARIES ---
 
-
-model Fair {
-  id          String   @id @default(uuid())
-  
-  // Basic Info
-  name        String
-  slug        String   @unique
-  description String
-  summary     String?
-  website     String?
-  venue       String?
-
-  type        String?
-  category    String?
-  status      String   @default("Beklemede")
-  tourNote    String?
-
-  // Images (Single URL strings)
-  logoImage   String?
-  bannerImage String?
-
-  // Simple Lists (Stored as arrays of strings)
-  displayedProducts String[]
-  paidServices      String[]
-  freeServices      String[]
-
-  // Booleans
-  displayOnBanner     Boolean @default(false)
-  isFeatured          Boolean @default(false)
-  isPublished         Boolean @default(false)
-  isSectoral          Boolean @default(false)
-  isDefiniteDeparture Boolean @default(false)
-
-  // Dates
-  date      String?  // Text representation (e.g. "2026-01-01")
-  startDate DateTime
-  endDate   DateTime
-
-  // --- RELATIONS (Connecting to Independent Entities) ---
-  
-  // 1. Accommodation (Hotel)
-  hotelId     String?
-  hotel       Hotel?    @relation(fields: [hotelId], references: [id])
-
-  // 2. Image Collections (Galleries)
-  tourGalleryId  String?
-  tourGallery    Gallery? @relation("TourGallery", fields: [tourGalleryId], references: [id])
-
-  venueGalleryId String?
-  venueGallery   Gallery? @relation("VenueGallery", fields: [venueGalleryId], references: [id])
-
-  fairGalleryId  String?
-  fairGallery    Gallery? @relation("FairGallery", fields: [fairGalleryId], references: [id])
-
-  // 3. Complex Nested Data (Tour Packages)
-  packages    TravelPackage[]
-
-    // Timestamps
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-}
-
-// --- 1. INDEPENDENT ENTITIES ---
-
-// A Hotel can exist even if no fairs are using it yet.
 model Hotel {
   id          String   @id @default(uuid())
   name        String
   description String?
-  imageUrls   String[] // We store a list of Cloudinary URLs
-  
-  // Relation: A hotel can be linked to multiple fairs
-  fairs       Fair[]
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  imageUrls   String[] // Array of Cloudinary URLs
+
+  // Relation: A hotel can be used by many Fairs
+  fairs Fair[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
-// A generic gallery to store collections of photos (e.g. "Shanghai City Tour")
 model Gallery {
   id          String   @id @default(uuid())
-  name        String   // e.g. "Shanghai City Views"
+  name        String
   description String?
   type        String   @default("GENERAL") // "TOUR", "VENUE", "GENERAL"
-  imageUrls   String[] 
+  imageUrls   String[]
 
-  // Inverse Relations: Tracking which fairs use this gallery
-  tourFairs   Fair[]   @relation("TourGallery")
-  venueFairs  Fair[]   @relation("VenueGallery")
-  fairFairs   Fair[]   @relation("FairGallery") // For general fair images
+  // Inverse Relations (Tracking where these galleries are used)
+  tourFairs  Fair[] @relation("TourGallery")
+  venueFairs Fair[] @relation("VenueGallery")
+  fairFairs  Fair[] @relation("FairGallery")
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// --- 2. THE MAIN ENTITY (FAIR) ---
+
+model Fair {
+  id String @id @default(uuid())
+
+  // Basic Info
+  name        String
+  slug        String  @unique // For URL: /fairs/expo-2026
+  description String
+  summary     String?
+  venue       String? // e.g. "Istanbul Expo Center"
+  website     String?
+
+  // --- NEW FIELD ---
+  category String? // e.g. "Tekstil", "Mobilya"
+  type     String? // e.g. "Uluslararası", "Ulusal"
+
+  // Dates
+  startDate DateTime
+  endDate   DateTime
+
+  // Status & Flags
+  status              String  @default("Beklemede") // Beklemede, Aktif, Pasif
+  isPublished         Boolean @default(false)
+  isFeatured          Boolean @default(false)
+  isSectoral          Boolean @default(false)
+  isDefiniteDeparture Boolean @default(false)
+
+  // Media (Single Images)
+  logoUrl         String?
+  bannerUrl       String?
+  displayOnBanner Boolean @default(false)
+
+  // Tags (String Arrays)
+  products     String[]
+  services     String[]
+  freeServices String[]
+
+  // --- RELATIONS ---
+
+  // 1. Accommodation (Link to Library)
+  hotelId String?
+  hotel   Hotel?  @relation(fields: [hotelId], references: [id])
+
+  // 2. Image Collections (Links to Library)
+  tourGalleryId String?
+  tourGallery   Gallery? @relation("TourGallery", fields: [tourGalleryId], references: [id])
+
+  venueGalleryId String?
+  venueGallery   Gallery? @relation("VenueGallery", fields: [venueGalleryId], references: [id])
+
+  fairGalleryId String?
+  fairGallery   Gallery? @relation("FairGallery", fields: [fairGalleryId], references: [id])
+
+  // 3. Nested Data (Owned by Fair)
+  packages TravelPackage[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 // --- 3. NESTED DETAILS ---
 
 model TravelPackage {
-  id             String   @id @default(uuid())
-  name           String   // e.g. "Ekonomik Paket"
-  duration       String?  // e.g. "4 Gece 5 Gün"
-  description    String?  // e.g. "3* Holiday Inn Express"
-  
-  priceSingle    Float?   // One Person Price
-  priceDouble    Float?   // Two Person Price
-  
-  // A package belongs to ONE specific Fair
-  fairId         String
-  fair           Fair     @relation(fields: [fairId], references: [id], onDelete: Cascade)
+  id          String  @id @default(uuid())
+  name        String // e.g. "Economic Package"
+  duration    String? // e.g. "3 Nights 4 Days"
+  description String?
 
-  // A package has MANY daily activities
-  activities     Activity[]
+  priceSingle Float?
+  priceDouble Float?
+
+  // Parent Relation
+  fairId String
+  fair   Fair   @relation(fields: [fairId], references: [id], onDelete: Cascade)
+
+  // Children
+  activities Activity[]
 }
 
 model Activity {
-  id              String        @id @default(uuid())
-  dayNumber       Int           // e.g. 1, 2, 3
-  description     String        // e.g. "Meeting at airport"
+  id          String @id @default(uuid())
+  dayNumber   Int
+  description String
 
-  // An activity belongs to ONE specific Package
-  packageId       String
-  travelPackage   TravelPackage @relation(fields: [packageId], references: [id], onDelete: Cascade)
+  // Parent Relation
+  packageId     String
+  travelPackage TravelPackage @relation(fields: [packageId], references: [id], onDelete: Cascade)
+}
+
+// --- 4. CAMPAIGNS ---
+model Campaign {
+  id          String   @id @default(uuid())
+  name        String
+  description String
+  isPublished Boolean
+  image       String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// --- 5. CONTACT ---
+model Message {
+  id             String   @id @default(uuid())
+  name           String
+  email          String
+  subject        String?
+  contactMessage String?
+  from           String?
+  isRead         Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @default(now())
 }

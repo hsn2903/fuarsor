@@ -6,11 +6,13 @@ import { Inter } from "next/font/google";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
+  // title: "Fuarlarım",
   title: {
     template: "%s | Fuarlarım",
     default: "Fuarlarım",
   },
-  description: "Dünya Fuarlarını Keşfet",
+  description: "Dünyadaki fuarlardan haberdar olun",
+  keywords: "fuar, çin, vize, danışmanlık, gezi",
 };
 
 export default function RootLayout({

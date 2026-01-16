@@ -1,29 +1,37 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import { createHotelAction } from "@/features/hotels/actions"; // Import from Ch 7
+import {
+  createHotelAction,
+  updateHotelAction,
+} from "@/features/hotels/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import ImageUpload from "@/components/shared/image-upload"; // Reused component
+import { Hotel } from "@/app/generated/prisma/client";
+import ImageUpload from "@/components/shared/image-upload";
 
-export default function HotelForm() {
-  // Connect to Server Action
-  const [state, formAction, isPending] = useActionState(
-    createHotelAction,
-    null
-  );
+interface HotelFormProps {
+  initialData?: Hotel | null;
+}
 
-  // Local state for images
-  const [images, setImages] = useState<string[]>([]);
+export default function HotelForm({ initialData }: HotelFormProps) {
+  // 1. Determine Action
+  const actionToUse = initialData
+    ? updateHotelAction.bind(null, initialData.id)
+    : createHotelAction;
+
+  const [state, formAction] = useActionState(actionToUse, null);
+
+  // 2. Local State for Images
+  const [images, setImages] = useState<string[]>(initialData?.imageUrls || []);
 
   return (
     <form
       action={formAction}
       className="space-y-8 max-w-3xl border p-6 rounded-lg bg-white shadow-sm"
     >
-      {/* Error Message */}
       {state?.error && (
         <div className="bg-red-50 text-red-600 p-3 rounded-md border border-red-200 text-sm font-medium">
           {state.error}
@@ -40,6 +48,7 @@ export default function HotelForm() {
           id="name"
           name="name"
           placeholder="Örn: Grand Hyatt Shanghai"
+          defaultValue={initialData?.name}
           required
         />
         {state?.fieldErrors?.name && (
@@ -54,8 +63,14 @@ export default function HotelForm() {
           id="description"
           name="description"
           placeholder="Konumu, yıldız sayısı ve imkanları hakkında bilgi..."
+          defaultValue={initialData?.description || ""}
           className="h-32"
         />
+        {state?.fieldErrors?.description && (
+          <p className="text-red-500 text-xs">
+            {state.fieldErrors.description}
+          </p>
+        )}
       </div>
 
       {/* Image Uploader */}
@@ -79,8 +94,8 @@ export default function HotelForm() {
 
       {/* Submit Button */}
       <div className="flex justify-end pt-4 border-t">
-        <Button type="submit" disabled={isPending} className="w-full md:w-auto">
-          {isPending ? "Kaydediliyor..." : "Oteli Kaydet"}
+        <Button type="submit" className="w-full md:w-auto">
+          {initialData ? "Değişiklikleri Kaydet" : "Oteli Kaydet"}
         </Button>
       </div>
     </form>

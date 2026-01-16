@@ -6,13 +6,11 @@ import Link from "next/link";
 import prisma from "@/lib/prisma";
 
 interface EditFairPageProps {
-  params: {
-    id: string;
-  };
+  params: Promise<{ id: string }>;
 }
 
 export default async function EditFairPage({ params }: EditFairPageProps) {
-  const { id } = params;
+  const { id } = await params;
 
   // 1. Fetch the Fair with ALL nested data
   const fair = await prisma.fair.findUnique({

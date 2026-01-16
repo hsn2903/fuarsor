@@ -7,18 +7,19 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="h-full relative bg-gray-50">
-      {/* Sidebar (Hidden on mobile, Fixed on Desktop) */}
-      <div className="hidden h-full md:flex md:w-72 md:flex-col md:fixed md:inset-y-0 z-80">
+    <div className="h-full relative bg-slate-50">
+      {/* 1. Desktop Sidebar */}
+      {/* Hidden on mobile (hidden), Fixed on desktop (md:flex), Width 72 */}
+      <div className="hidden h-full md:flex md:w-72 md:flex-col md:fixed md:inset-y-0 z-80 bg-gray-900">
         <AdminSidebar />
       </div>
 
-      {/* Main Content Area */}
-      <main className="md:pl-72 h-full flex flex-col">
-        {/* Navbar */}
+      {/* 2. Main Content Area */}
+      {/* Pushed to right by 72 (md:pl-72) to make room for sidebar */}
+      <main className="md:pl-72 h-full flex flex-col min-h-screen">
         <Navbar />
 
-        {/* Page Content */}
+        {/* Render the specific page content here */}
         <div className="flex-1 p-8 overflow-y-auto">{children}</div>
       </main>
     </div>

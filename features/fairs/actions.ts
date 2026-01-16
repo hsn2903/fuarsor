@@ -2,137 +2,165 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { fairSchema } from "./schama";
 import prisma from "@/lib/prisma";
+import z from "zod";
+import { Prisma } from "@/app/generated/prisma/client";
 
-// Helper to sanitize relation IDs (handle "no-selection" or empty strings)
-function sanitizeRelationId(id: string | null | undefined) {
-  if (!id || id === "no-selection") return null;
-  return id;
-}
-
-export async function createFairAction(prevState: any, formData: FormData) {
-  // --- 1. HELPER: Safe JSON Parsing ---
-  // Since we send arrays (products, packages) as JSON strings,
-  // we need a safe way to parse them without crashing.
-  const parseJson = (key: string, fallback: any) => {
-    const value = formData.get(key);
-    if (typeof value === "string") {
-      try {
-        return JSON.parse(value);
-      } catch {
-        return fallback;
-      }
+// Helper function to safely parse JSON from FormData
+const parseJson = (value: any, fallback: any) => {
+  if (typeof value === "string") {
+    try {
+      return JSON.parse(value);
+    } catch {
+      return fallback;
     }
-    return fallback;
-  };
+  }
+  return fallback;
+};
 
-  // --- 2. EXTRACT & PREPARE DATA ---
-  const rawData = {
-    // A. Text Fields
-    name: formData.get("name"),
-    slug: formData.get("slug"),
-    description: formData.get("description"),
-    summary: formData.get("summary"),
-    venue: formData.get("venue"),
-    website: formData.get("website"),
+// --- 1. ZOD SCHEMA DEFINITION ---
+const fairSchema = z.object({
+  name: z.string().min(1, "Fuar adı zorunludur."),
+  slug: z.string().min(1, "URL Slug zorunludur."),
+  venue: z.string().optional(),
+  website: z.string().optional(),
 
-    // B. Dates (Zod will coerce these strings to Dates)
-    startDate: formData.get("startDate"),
-    endDate: formData.get("endDate"),
+  // NEW FIELDS
+  category: z.string().optional(),
+  type: z.string().optional(),
 
-    // C. Status & Dropdowns
-    status: formData.get("status"),
+  startDate: z.string().refine((date) => !isNaN(Date.parse(date)), {
+    message: "Geçerli bir başlangıç tarihi giriniz.",
+  }),
+  endDate: z.string().refine((date) => !isNaN(Date.parse(date)), {
+    message: "Geçerli bir bitiş tarihi giriniz.",
+  }),
 
-    // D. Booleans (Checkboxes)
-    // In HTML, a checked box sends "on", an unchecked one sends null.
-    isPublished: formData.get("isPublished") === "on",
-    isFeatured: formData.get("isFeatured") === "on",
-    isSectoral: formData.get("isSectoral") === "on",
-    isDefiniteDeparture: formData.get("isDefiniteDeparture") === "on",
-    displayOnBanner: formData.get("displayOnBanner") === "on",
+  description: z.string().min(10, "Açıklama en az 10 karakter olmalıdır."),
+  summary: z.string().optional(),
 
-    // E. Media (Single Images)
-    logoUrl: formData.get("logoUrl"),
-    bannerUrl: formData.get("bannerUrl"),
+  // Status & Booleans
+  status: z.string().default("Beklemede"),
+  isPublished: z.coerce.boolean(),
+  isFeatured: z.coerce.boolean(),
+  isSectoral: z.coerce.boolean(),
+  isDefiniteDeparture: z.coerce.boolean(),
+  displayOnBanner: z.coerce.boolean(),
 
-    // F. Relationships (IDs from Independent Entities)
-    // We send empty strings if nothing is selected, Zod handles that.
-    hotelId: formData.get("hotelId"),
-    tourGalleryId: formData.get("tourGalleryId"),
-    venueGalleryId: formData.get("venueGalleryId"),
-    fairGalleryId: formData.get("fairGalleryId"),
+  // Images
+  logoUrl: z.string().optional(),
+  bannerUrl: z.string().optional(),
 
-    // G. Complex JSON Data
-    products: parseJson("products", []),
-    services: parseJson("services", []),
-    freeServices: parseJson("freeServices", []),
+  // Relations
+  hotelId: z.string().optional(),
+  tourGalleryId: z.string().optional(),
+  venueGalleryId: z.string().optional(),
+  fairGalleryId: z.string().optional(),
 
-    // THE BIG ONE: Nested Packages & Activities
-    packages: parseJson("packages", []),
-  };
+  // Arrays (These come as JSON strings from the hidden inputs)
+  products: z.string().transform((str, ctx) => {
+    try {
+      return JSON.parse(str) as string[];
+    } catch {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Invalid JSON" });
+      return [];
+    }
+  }),
+  services: z.string().transform((str) => JSON.parse(str) as string[]),
+  freeServices: z.string().transform((str) => JSON.parse(str) as string[]),
 
-  // --- 3. VALIDATION ---
+  // Packages (Nested JSON)
+  packages: z.string().transform((str) => {
+    try {
+      // You might want a stricter schema for the package structure here
+      return JSON.parse(str);
+    } catch {
+      return [];
+    }
+  }),
+});
+
+export type ActionState = {
+  error?: string;
+  fieldErrors?: Record<string, string[]>;
+} | null;
+
+// --- 2. CREATE ACTION ---
+export async function createFairAction(
+  prevState: ActionState,
+  formData: FormData
+): Promise<ActionState> {
+  // 1. Convert FormData to Object
+  const rawData = Object.fromEntries(formData.entries());
+
+  // 2. Validate
   const validated = fairSchema.safeParse(rawData);
 
   if (!validated.success) {
-    // Return errors to the UI so we can show red borders
     return {
-      error: "Validasyon Hatası. Lütfen zorunlu alanları kontrol edin.",
-      fieldErrors: validated.error.flatten().fieldErrors,
+      error: "Lütfen formu kontrol ediniz.",
+      fieldErrors: validated.error.flatten().fieldErrors as Record<
+        string,
+        string[]
+      >,
     };
   }
 
   const data = validated.data;
 
-  // --- 4. DATABASE CREATION (Nested Writes) ---
+  // 3. Helper to handle "unassigned" from Select components
+  const cleanRelation = (id?: string) =>
+    id === "unassigned" || !id ? null : id;
+
   try {
     await prisma.fair.create({
       data: {
-        // Simple Fields
         name: data.name,
         slug: data.slug,
+        venue: data.venue,
+        website: data.website,
+
+        // NEW FIELDS MAPPED HERE
+        category: data.category || null,
+        type: data.type || null,
+
+        startDate: new Date(data.startDate),
+        endDate: new Date(data.endDate),
+
         description: data.description,
         summary: data.summary,
-        venue: data.venue,
-        website: data.website || null, // Convert empty string to null for DB
-        startDate: data.startDate,
-        endDate: data.endDate,
-        status: data.status,
 
-        // Booleans
+        status: data.status,
         isPublished: data.isPublished,
         isFeatured: data.isFeatured,
         isSectoral: data.isSectoral,
         isDefiniteDeparture: data.isDefiniteDeparture,
         displayOnBanner: data.displayOnBanner,
 
-        // Media & Tags
-        logoImage: data.logoUrl,
-        bannerImage: data.bannerUrl,
-        displayedProducts: data.products,
-        paidServices: data.services,
+        logoUrl: data.logoUrl,
+        bannerUrl: data.bannerUrl,
+
+        // Arrays
+        products: data.products,
+        services: data.services,
         freeServices: data.freeServices,
 
-        // Relations: Connect IDs if they exist
-        // undefined means "do nothing", null means "disconnect"
-        hotelId: sanitizeRelationId(data.hotelId),
-        tourGalleryId: sanitizeRelationId(data.tourGalleryId),
-        venueGalleryId: sanitizeRelationId(data.venueGalleryId),
-        fairGalleryId: sanitizeRelationId(data.fairGalleryId),
+        // Relations
+        hotelId: cleanRelation(data.hotelId),
+        tourGalleryId: cleanRelation(data.tourGalleryId),
+        venueGalleryId: cleanRelation(data.venueGalleryId),
+        fairGalleryId: cleanRelation(data.fairGalleryId),
 
-        // NESTED WRITE: Create Packages AND their Activities
+        // Nested Packages Creation
         packages: {
-          create: data.packages.map((pkg) => ({
+          create: data.packages.map((pkg: any) => ({
             name: pkg.name,
             duration: pkg.duration,
             description: pkg.description,
-            priceSingle: pkg.priceSingle,
-            priceDouble: pkg.priceDouble,
-
-            // Nested write level 2: Activities
+            priceSingle: Number(pkg.priceSingle),
+            priceDouble: Number(pkg.priceDouble),
             activities: {
-              create: pkg.activities.map((act) => ({
+              create: pkg.activities.map((act: any) => ({
                 dayNumber: act.dayNumber,
                 description: act.description,
               })),
@@ -142,27 +170,125 @@ export async function createFairAction(prevState: any, formData: FormData) {
       },
     });
   } catch (error) {
-    console.error("Fair Create Error:", error);
-    // Prisma error code P2002 means "Unique constraint failed" (Duplicate Slug)
-    // @ts-ignore
-    if (error.code === "P2002") {
-      return { error: "Bu URL (slug) zaten kullanılıyor. Lütfen değiştirin." };
+    console.error("Database Error:", error);
+    // Handle Unique Constraint Violation (Slug)
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2002"
+    ) {
+      return {
+        error: "Bu URL Slug adresi zaten kullanılıyor. Lütfen değiştirin.",
+      };
     }
-    return { error: "Fuar oluşturulurken bir hata oluştu." };
+    return { error: "Veritabanı hatası oluştu." };
   }
 
-  // --- 5. FINISH ---
   revalidatePath("/admin/fairs");
   redirect("/admin/fairs");
 }
 
-// ... existing imports
+// --- 3. UPDATE ACTION ---
+export async function updateFairAction(
+  id: string,
+  prevState: ActionState,
+  formData: FormData
+): Promise<ActionState> {
+  const rawData = Object.fromEntries(formData.entries());
+  const validated = fairSchema.safeParse(rawData);
+
+  if (!validated.success) {
+    return {
+      error: "Lütfen formu kontrol ediniz.",
+      fieldErrors: validated.error.flatten().fieldErrors as Record<
+        string,
+        string[]
+      >,
+    };
+  }
+
+  const data = validated.data;
+  const cleanRelation = (val?: string) =>
+    val === "unassigned" || !val ? null : val;
+
+  try {
+    // Transaction needed to safely update nested packages (delete old -> create new strategy is simplest)
+    await prisma.$transaction(async (tx) => {
+      // 1. Update Basic Fields
+      await tx.fair.update({
+        where: { id },
+        data: {
+          name: data.name,
+          slug: data.slug,
+          venue: data.venue,
+          website: data.website,
+
+          // NEW FIELDS MAPPED HERE
+          category: data.category || null,
+          type: data.type || null,
+
+          startDate: new Date(data.startDate),
+          endDate: new Date(data.endDate),
+          description: data.description,
+          summary: data.summary,
+          status: data.status,
+          isPublished: data.isPublished,
+          isFeatured: data.isFeatured,
+          isSectoral: data.isSectoral,
+          isDefiniteDeparture: data.isDefiniteDeparture,
+          displayOnBanner: data.displayOnBanner,
+          logoUrl: data.logoUrl,
+          bannerUrl: data.bannerUrl,
+          products: data.products,
+          services: data.services,
+          freeServices: data.freeServices,
+          hotelId: cleanRelation(data.hotelId),
+          tourGalleryId: cleanRelation(data.tourGalleryId),
+          venueGalleryId: cleanRelation(data.venueGalleryId),
+          fairGalleryId: cleanRelation(data.fairGalleryId),
+        },
+      });
+
+      // 2. Handle Packages (Simple Strategy: Delete All & Re-create)
+      // Note: In a production app with user bookings, you wouldn't delete packages this casually.
+      await tx.travelPackage.deleteMany({ where: { fairId: id } });
+
+      for (const pkg of data.packages) {
+        await tx.travelPackage.create({
+          data: {
+            fairId: id,
+            name: pkg.name,
+            duration: pkg.duration,
+            description: pkg.description,
+            priceSingle: Number(pkg.priceSingle),
+            priceDouble: Number(pkg.priceDouble),
+            activities: {
+              create: pkg.activities.map((act: any) => ({
+                dayNumber: act.dayNumber,
+                description: act.description,
+              })),
+            },
+          },
+        });
+      }
+    });
+  } catch (error) {
+    console.error("Update Error:", error);
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2002"
+    ) {
+      return { error: "Bu URL Slug adresi zaten kullanılıyor." };
+    }
+    return { error: "Güncelleme sırasında hata oluştu." };
+  }
+
+  revalidatePath("/admin/fairs");
+  redirect("/admin/fairs");
+}
 
 // --- DELETE ACTION ---
 export async function deleteFairAction(id: string) {
   try {
-    // Because we used "onDelete: Cascade" in schema.prisma,
-    // deleting a Fair AUTOMATICALLY deletes all its TravelPackages and Activities.
     await prisma.fair.delete({
       where: { id },
     });
@@ -171,154 +297,6 @@ export async function deleteFairAction(id: string) {
     return { success: "Fuar başarıyla silindi." };
   } catch (error) {
     console.error("Delete Error:", error);
-    return { error: "Fuar silinirken bir hata oluştu." };
+    return { error: "Silme işlemi sırasında hata oluştu." };
   }
-}
-
-// ... existing imports
-
-// --- UPDATE ACTION ---
-export async function updateFairAction(
-  id: string, // We need the ID to know which fair to update
-  prevState: any,
-  formData: FormData
-) {
-  // 1. Helper for JSON parsing (Same as create)
-  const parseJson = (key: string, fallback: any) => {
-    const value = formData.get(key);
-    if (typeof value === "string") {
-      try {
-        return JSON.parse(value);
-      } catch {
-        return fallback;
-      }
-    }
-    return fallback;
-  };
-
-  // 2. Extract Data (Same as create)
-  const rawData = {
-    name: formData.get("name"),
-    slug: formData.get("slug"),
-    description: formData.get("description"),
-    summary: formData.get("summary"),
-    venue: formData.get("venue"),
-    website: formData.get("website"),
-
-    startDate: formData.get("startDate"),
-    endDate: formData.get("endDate"),
-
-    status: formData.get("status"),
-
-    isPublished: formData.get("isPublished") === "on",
-    isFeatured: formData.get("isFeatured") === "on",
-    isSectoral: formData.get("isSectoral") === "on",
-    isDefiniteDeparture: formData.get("isDefiniteDeparture") === "on",
-    displayOnBanner: formData.get("displayOnBanner") === "on",
-
-    logoUrl: formData.get("logoUrl"),
-    bannerUrl: formData.get("bannerUrl"),
-
-    hotelId: formData.get("hotelId"),
-    tourGalleryId: formData.get("tourGalleryId"),
-    venueGalleryId: formData.get("venueGalleryId"),
-    fairGalleryId: formData.get("fairGalleryId"),
-
-    products: parseJson("products", []),
-    services: parseJson("services", []),
-    freeServices: parseJson("freeServices", []),
-
-    packages: parseJson("packages", []),
-  };
-
-  // 3. Validate
-  const validated = fairSchema.safeParse(rawData);
-
-  if (!validated.success) {
-    return {
-      error: "Validasyon Hatası. Lütfen alanları kontrol edin.",
-      fieldErrors: validated.error.flatten().fieldErrors,
-    };
-  }
-
-  const data = validated.data;
-
-  // 4. DATABASE UPDATE (The Transaction)
-  try {
-    // We use a Transaction to ensure we clean up old packages before adding new ones
-    // This is the simplest way to handle "Editing" nested lists: Delete All -> Re-create All
-    await prisma.$transaction(async (tx) => {
-      // A. Delete existing packages (and their activities via Cascade)
-      await tx.travelPackage.deleteMany({
-        where: { fairId: id },
-      });
-
-      // B. Update the Fair and create NEW packages
-      await tx.fair.update({
-        where: { id },
-        data: {
-          // Simple Fields
-          name: data.name,
-          slug: data.slug,
-          description: data.description,
-          summary: data.summary,
-          venue: data.venue,
-          website: data.website || null,
-          startDate: data.startDate,
-          endDate: data.endDate,
-          status: data.status,
-
-          // Booleans
-          isPublished: data.isPublished,
-          isFeatured: data.isFeatured,
-          isSectoral: data.isSectoral,
-          isDefiniteDeparture: data.isDefiniteDeparture,
-          displayOnBanner: data.displayOnBanner,
-
-          // Media & Tags
-          logoImage: data.logoUrl,
-          bannerImage: data.bannerUrl,
-          displayedProducts: data.products,
-          paidServices: data.services,
-          freeServices: data.freeServices,
-
-          // Relations
-          hotelId: sanitizeRelationId(data.hotelId),
-          tourGalleryId: sanitizeRelationId(data.tourGalleryId),
-          venueGalleryId: sanitizeRelationId(data.venueGalleryId),
-          fairGalleryId: sanitizeRelationId(data.fairGalleryId),
-
-          // NESTED WRITE: Re-create Packages
-          packages: {
-            create: data.packages.map((pkg) => ({
-              name: pkg.name,
-              duration: pkg.duration,
-              description: pkg.description,
-              priceSingle: pkg.priceSingle,
-              priceDouble: pkg.priceDouble,
-
-              activities: {
-                create: pkg.activities.map((act) => ({
-                  dayNumber: act.dayNumber,
-                  description: act.description,
-                })),
-              },
-            })),
-          },
-        },
-      });
-    });
-  } catch (error) {
-    console.error("Fair Update Error:", error);
-    // @ts-ignore
-    if (error.code === "P2002") {
-      return { error: "Bu URL (slug) zaten kullanılıyor." };
-    }
-    return { error: "Güncelleme sırasında hata oluştu." };
-  }
-
-  // 5. Finish
-  revalidatePath("/admin/fairs");
-  revalidatePath(`/admin/fairs/${id}/edit`); // Clear cache for the edit page too
-  redirect("/admin/fairs");
 }

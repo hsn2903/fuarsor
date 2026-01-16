@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import { createFairAction } from "@/features/fairs/actions"; // Ensure this path is correct
+import { createFairAction, updateFairAction } from "@/features/fairs/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,23 +14,41 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-// Adjust these import paths to match your project structure
-import { SelectOption, PackageState } from "../types";
-import TagInput from "./tag-input";
+import { X } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Activity, Fair, TravelPackage } from "@/app/generated/prisma/client";
 import ImageUpload from "@/components/shared/image-upload";
 import PackageManager from "./packages/package-manager";
-import { Activity, Fair, TravelPackage } from "@/app/generated/prisma/client";
+import { FAIR_CATEGORIES, FAIR_TYPES } from "@/lib/constants";
 
-// --- TYPE DEFINITIONS ---
-// Defined once and used for the Props
+// DB Types
+
+// --- TYPES ---
+
 type FairWithRelations = Fair & {
   packages: (TravelPackage & { activities: Activity[] })[];
+};
+
+type SelectOption = {
+  id: string;
+  name: string;
+};
+
+// Re-using the PackageState type for consistency
+type PackageState = {
+  tempId: number;
+  name: string;
+  duration: string;
+  description: string;
+  priceSingle: number;
+  priceDouble: number;
+  activities: { dayNumber: number; description: string }[];
 };
 
 interface FairFormProps {
   hotelOptions: SelectOption[];
   galleryOptions: SelectOption[];
-  initialData?: FairWithRelations | null; // Support for Edit Mode
+  initialData?: FairWithRelations | null;
 }
 
 export default function FairForm({
@@ -38,47 +56,80 @@ export default function FairForm({
   galleryOptions,
   initialData,
 }: FairFormProps) {
-  // Server Action Hook
-  const [state, formAction, isPending] = useActionState(createFairAction, null);
+  // --- 1. SETUP ACTIONS (Create vs Update) ---
+  const actionToUse = initialData
+    ? updateFairAction.bind(null, initialData.id)
+    : createFairAction;
 
-  // --- 1. LOCAL STATE ---
-  // We only keep state for complex fields (Arrays, Images, Nested Objects).
-  // Simple fields (Strings, IDs) are handled natively by the form.
+  const [state, formAction] = useActionState(actionToUse, null);
+
+  // --- 2. INITIALIZE STATE (Pre-fill if Edit Mode) ---
+  // Media
+  const [logoUrl, setLogoUrl] = useState(initialData?.logoUrl || "");
+  const [bannerUrl, setBannerUrl] = useState(initialData?.bannerUrl || "");
 
   // Tags
   const [products, setProducts] = useState<string[]>(
-    initialData?.displayedProducts
-      ? (initialData.displayedProducts as string[])
-      : []
+    initialData?.products || []
   );
   const [services, setServices] = useState<string[]>(
-    initialData?.paidServices ? (initialData.paidServices as string[]) : []
+    initialData?.services || []
   );
   const [freeServices, setFreeServices] = useState<string[]>(
-    initialData?.freeServices ? (initialData.freeServices as string[]) : []
+    initialData?.freeServices || []
   );
 
-  // Media (We store the URL string here to pass to the hidden input)
-  const [logoUrl, setLogoUrl] = useState(initialData?.logoImage || "");
-  const [bannerUrl, setBannerUrl] = useState(initialData?.bannerImage || "");
+  // Packages (Transform DB Data to UI State)
+  const [packages, setPackages] = useState<PackageState[]>(
+    initialData?.packages.map((pkg) => ({
+      tempId: Math.random(), // Frontend-only ID for React Keys
+      name: pkg.name,
+      duration: pkg.duration || "",
+      description: pkg.description || "",
+      priceSingle: pkg.priceSingle || 0,
+      priceDouble: pkg.priceDouble || 0,
+      activities: pkg.activities
+        .map((act) => ({
+          dayNumber: act.dayNumber,
+          description: act.description,
+        }))
+        .sort((a, b) => a.dayNumber - b.dayNumber),
+    })) || []
+  );
 
-  // Packages (Complex Nested State)
-  // Note: If editing, you would need a mapper here to convert Prisma structure to PackageState structure.
-  // For now, we initialize empty or with existing data if mapped.
-  const [packages, setPackages] = useState<PackageState[]>([]);
+  // Helper for Tag Inputs
+  const handleAddTag = (
+    e: React.KeyboardEvent<HTMLInputElement>,
+    list: string[],
+    setList: Function
+  ) => {
+    if (e.key === "Enter") {
+      e.preventDefault(); // Stop form submission
+      const val = e.currentTarget.value.trim();
+      if (val && !list.includes(val)) {
+        setList([...list, val]);
+        e.currentTarget.value = "";
+      }
+    }
+  };
+
+  // HELPER: Convert null/undefined database values to our specific "unassigned" string
+  // If initialData.hotelId is null, we return "unassigned" so the dropdown shows "Seçim Yok"
+  const getValue = (val?: string | null) => val || "unassigned";
 
   return (
     <form action={formAction} className="space-y-10 pb-20">
-      {/* --- ERROR MESSAGE --- */}
+      {/* Global Error Display */}
       {state?.error && (
-        <div className="bg-red-50 border border-red-200 text-red-600 p-4 rounded-md">
+        <div className="bg-red-50 text-red-600 p-4 rounded-lg border border-red-200">
           <p className="font-bold">Hata:</p>
           <p>{state.error}</p>
         </div>
       )}
 
-      {/* --- HIDDEN INPUTS (The Bridge) --- */}
-      {/* Only for the state-managed fields above */}
+      {/* --- HIDDEN INPUTS (Serialize React State for Server Action) --- */}
+      <input type="hidden" name="logoUrl" value={logoUrl} />
+      <input type="hidden" name="bannerUrl" value={bannerUrl} />
       <input type="hidden" name="products" value={JSON.stringify(products)} />
       <input type="hidden" name="services" value={JSON.stringify(services)} />
       <input
@@ -88,24 +139,17 @@ export default function FairForm({
       />
       <input type="hidden" name="packages" value={JSON.stringify(packages)} />
 
-      <input type="hidden" name="logoUrl" value={logoUrl} />
-      <input type="hidden" name="bannerUrl" value={bannerUrl} />
-
       {/* --- SECTION 1: GENERAL INFORMATION --- */}
-      <div className="space-y-6 border p-6 rounded-lg bg-white shadow-sm">
-        <h2 className="text-xl font-bold tracking-tight">Genel Bilgiler</h2>
-
+      <div className="space-y-4">
+        <h3 className="text-lg font-medium">Genel Bilgiler</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Name */}
           <div className="space-y-2">
-            <Label htmlFor="name">
-              Fuar Adı <span className="text-red-500">*</span>
-            </Label>
+            <Label htmlFor="name">Fuar Adı</Label>
             <Input
               id="name"
               name="name"
+              placeholder="Örn: Global Tekstil Fuarı 2026"
               defaultValue={initialData?.name}
-              placeholder="Örn: Expo 2026 Shanghai"
               required
             />
             {state?.fieldErrors?.name && (
@@ -113,16 +157,13 @@ export default function FairForm({
             )}
           </div>
 
-          {/* Slug */}
           <div className="space-y-2">
-            <Label htmlFor="slug">
-              URL Slug <span className="text-red-500">*</span>
-            </Label>
+            <Label htmlFor="slug">URL Slug (benzersiz)</Label>
             <Input
               id="slug"
               name="slug"
+              placeholder="orn-global-tekstil-2026"
               defaultValue={initialData?.slug}
-              placeholder="expo-2026-shanghai"
               required
             />
             {state?.fieldErrors?.slug && (
@@ -130,39 +171,28 @@ export default function FairForm({
             )}
           </div>
 
-          {/* Venue */}
           <div className="space-y-2">
             <Label htmlFor="venue">Fuar Alanı / Şehir</Label>
             <Input
               id="venue"
               name="venue"
+              placeholder="Örn: Shanghai New Expo Centre"
               defaultValue={initialData?.venue || ""}
-              placeholder="Shanghai, Çin"
             />
           </div>
 
-          {/* Website */}
           <div className="space-y-2">
             <Label htmlFor="website">Web Sitesi</Label>
             <Input
               id="website"
               name="website"
-              defaultValue={initialData?.website || ""}
               placeholder="https://..."
+              defaultValue={initialData?.website || ""}
             />
-            {state?.fieldErrors?.website && (
-              <p className="text-red-500 text-xs">
-                {state.fieldErrors.website}
-              </p>
-            )}
           </div>
 
-          {/* Dates */}
-          {/* We format Date objects to YYYY-MM-DD for the input */}
           <div className="space-y-2">
-            <Label htmlFor="startDate">
-              Başlangıç Tarihi <span className="text-red-500">*</span>
-            </Label>
+            <Label htmlFor="startDate">Başlangıç Tarihi</Label>
             <Input
               type="date"
               id="startDate"
@@ -177,9 +207,7 @@ export default function FairForm({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="endDate">
-              Bitiş Tarihi <span className="text-red-500">*</span>
-            </Label>
+            <Label htmlFor="endDate">Bitiş Tarihi</Label>
             <Input
               type="date"
               id="endDate"
@@ -193,7 +221,6 @@ export default function FairForm({
             />
           </div>
 
-          {/* Status (Dropdown) */}
           <div className="space-y-2">
             <Label htmlFor="status">Durum</Label>
             <Select
@@ -201,7 +228,7 @@ export default function FairForm({
               defaultValue={initialData?.status || "Beklemede"}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Seçiniz" />
+                <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="Beklemede">Beklemede</SelectItem>
@@ -212,17 +239,50 @@ export default function FairForm({
           </div>
         </div>
 
-        {/* Text Areas */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Kategori Seçimi */}
+          <div className="space-y-2">
+            <Label htmlFor="category">Fuar Kategorisi</Label>
+            <Select name="category" defaultValue={initialData?.category || ""}>
+              <SelectTrigger>
+                <SelectValue placeholder="Kategori seçin..." />
+              </SelectTrigger>
+              <SelectContent>
+                {FAIR_CATEGORIES.map((category) => (
+                  <SelectItem key={category} value={category}>
+                    {category}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Tip Seçimi */}
+          <div className="space-y-2">
+            <Label htmlFor="type">Fuar Tipi</Label>
+            <Select name="type" defaultValue={initialData?.type || ""}>
+              <SelectTrigger>
+                <SelectValue placeholder="Tip seçin..." />
+              </SelectTrigger>
+              <SelectContent>
+                {FAIR_TYPES.map((type) => (
+                  <SelectItem key={type} value={type}>
+                    {type}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
         <div className="space-y-2">
-          <Label htmlFor="description">
-            Detaylı Açıklama <span className="text-red-500">*</span>
-          </Label>
+          <Label htmlFor="description">Genel Açıklama</Label>
           <Textarea
             id="description"
             name="description"
-            defaultValue={initialData?.description || ""}
             placeholder="Fuar hakkında detaylı bilgi..."
             className="h-32"
+            defaultValue={initialData?.description}
             required
           />
           {state?.fieldErrors?.description && (
@@ -233,75 +293,173 @@ export default function FairForm({
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="summary">Kısa Özet (Liste görünümü için)</Label>
+          <Label htmlFor="summary">Kısa Özet (Opsiyonel)</Label>
           <Textarea
             id="summary"
             name="summary"
+            placeholder="Listeleme sayfalarında görünecek kısa açıklama."
             defaultValue={initialData?.summary || ""}
-            placeholder="Kısa özet..."
           />
         </div>
       </div>
 
-      {/* --- SECTION 2: SETTINGS (Switches) --- */}
-      {/* Switches in Shadcn usually need a hidden input or defaultValue handling if using FormData directly. 
-          Standard Shadcn Switch uses 'checked' state. 
-          To make this work with FormData without state, we use defaultChecked + name.
-      */}
-      <div className="space-y-6 border p-6 rounded-lg bg-white shadow-sm">
-        <h2 className="text-xl font-bold tracking-tight">
-          Ayarlar & Görünürlük
-        </h2>
+      <hr />
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="flex items-center gap-3 border p-4 rounded-md">
-            <Switch
-              name="isPublished"
-              defaultChecked={initialData?.isPublished}
-            />
-            <Label>Yayında</Label>
+      {/* --- SECTION 2: BOOLEAN SWITCHES --- */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+        <div className="flex items-center justify-between rounded-lg border p-4">
+          <div className="space-y-0.5">
+            <Label>Yayınla</Label>
+            <div className="text-xs text-muted-foreground">
+              Web sitesinde görünür
+            </div>
           </div>
-          <div className="flex items-center gap-3 border p-4 rounded-md">
-            <Switch
-              name="isFeatured"
-              defaultChecked={initialData?.isFeatured}
-            />
-            <Label>Öne Çıkan</Label>
+          <Switch
+            name="isPublished"
+            defaultChecked={initialData?.isPublished}
+          />
+        </div>
+        <div className="flex items-center justify-between rounded-lg border p-4">
+          <div className="space-y-0.5">
+            <Label>Öne Çıkar</Label>
+            <div className="text-xs text-muted-foreground">
+              Anasayfada göster
+            </div>
           </div>
-          <div className="flex items-center gap-3 border p-4 rounded-md">
-            <Switch
-              name="displayOnBanner"
-              defaultChecked={initialData?.displayOnBanner}
-            />
-            <Label>Banner'da Göster</Label>
+          <Switch name="isFeatured" defaultChecked={initialData?.isFeatured} />
+        </div>
+        <div className="flex items-center justify-between rounded-lg border p-4">
+          <div className="space-y-0.5">
+            <Label>Kesin Hareket</Label>
+            <div className="text-xs text-muted-foreground">
+              Gidiş garantili mi?
+            </div>
           </div>
-          <div className="flex items-center gap-3 border p-4 rounded-md">
-            <Switch
-              name="isSectoral"
-              defaultChecked={initialData?.isSectoral}
-            />
-            <Label>Sektörel Fuar</Label>
+          <Switch
+            name="isDefiniteDeparture"
+            defaultChecked={initialData?.isDefiniteDeparture}
+          />
+        </div>
+        <div className="flex items-center justify-between rounded-lg border p-4">
+          <div className="space-y-0.5">
+            <Label>Sektörel</Label>
+            <div className="text-xs text-muted-foreground">
+              Sektörel fuar mı?
+            </div>
           </div>
-          <div className="flex items-center gap-3 border p-4 rounded-md">
-            <Switch
-              name="isDefiniteDeparture"
-              defaultChecked={initialData?.isDefiniteDeparture}
-            />
-            <Label>Kesin Hareketli</Label>
+          <Switch name="isSectoral" defaultChecked={initialData?.isSectoral} />
+        </div>
+        <div className="flex items-center justify-between rounded-lg border p-4">
+          <div className="space-y-0.5">
+            <Label>Bannerda Göster</Label>
+            <div className="text-xs text-muted-foreground">
+              Ana sliderda yer al
+            </div>
+          </div>
+          <Switch
+            name="displayOnBanner"
+            defaultChecked={initialData?.displayOnBanner}
+          />
+        </div>
+      </div>
+
+      <hr />
+
+      {/* --- SECTION 3: RELATIONS (Dropdowns) --- */}
+      <div className="space-y-4">
+        <h3 className="text-lg font-medium">Bağlantılar</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-2">
+            <Label>Konaklama (Otel)</Label>
+            {/* 1. Use getValue helper for defaultValue */}
+            <Select
+              name="hotelId"
+              defaultValue={getValue(initialData?.hotelId)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Otel Seçiniz" />
+              </SelectTrigger>
+              <SelectContent>
+                {/* 2. Change value="" to value="unassigned" */}
+                <SelectItem value="unassigned">Seçim Yok</SelectItem>
+                {hotelOptions.map((opt) => (
+                  <SelectItem key={opt.id} value={opt.id}>
+                    {opt.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Tur Galerisi</Label>
+            <Select
+              name="tourGalleryId"
+              defaultValue={getValue(initialData?.tourGalleryId)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Galeri Seçiniz" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="unassigned">Seçim Yok</SelectItem>
+                {galleryOptions.map((opt) => (
+                  <SelectItem key={opt.id} value={opt.id}>
+                    {opt.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Fuar Alanı Galerisi</Label>
+            <Select
+              name="venueGalleryId"
+              defaultValue={getValue(initialData?.venueGalleryId)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Galeri Seçiniz" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="unassigned">Seçim Yok</SelectItem>
+                {galleryOptions.map((opt) => (
+                  <SelectItem key={opt.id} value={opt.id}>
+                    {opt.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Genel Fuar Galerisi</Label>
+            <Select
+              name="fairGalleryId"
+              defaultValue={getValue(initialData?.fairGalleryId)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Galeri Seçiniz" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="unassigned">Seçim Yok</SelectItem>
+                {galleryOptions.map((opt) => (
+                  <SelectItem key={opt.id} value={opt.id}>
+                    {opt.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
       </div>
 
-      {/* --- SECTION 3: MEDIA (Logo & Banner) --- */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 border p-6 rounded-lg bg-white shadow-sm">
-        <h2 className="text-xl font-bold tracking-tight col-span-2">
-          Medya Görselleri
-        </h2>
+      <hr />
 
-        {/* Logo Upload */}
+      {/* --- SECTION 4: MEDIA UPLOADS --- */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <div className="space-y-4">
-          <Label>Fuar Logosu</Label>
-          <div className="bg-slate-50 p-4 rounded-md border border-dashed">
+          <Label>Logo Görseli</Label>
+          <div className="bg-slate-50 border border-dashed rounded-md p-4">
             <ImageUpload
               value={logoUrl ? [logoUrl] : []}
               onChange={(url) => setLogoUrl(url)}
@@ -309,11 +467,9 @@ export default function FairForm({
             />
           </div>
         </div>
-
-        {/* Banner Upload */}
         <div className="space-y-4">
-          <Label>Fuar Banner (Yatay)</Label>
-          <div className="bg-slate-50 p-4 rounded-md border border-dashed">
+          <Label>Banner Görseli (Geniş)</Label>
+          <div className="bg-slate-50 border border-dashed rounded-md p-4">
             <ImageUpload
               value={bannerUrl ? [bannerUrl] : []}
               onChange={(url) => setBannerUrl(url)}
@@ -323,163 +479,110 @@ export default function FairForm({
         </div>
       </div>
 
-      {/* --- SECTION 4: RELATIONS (Hotel & Galleries) --- */}
-      <div className="space-y-6 border p-6 rounded-lg bg-white shadow-sm">
-        <h2 className="text-xl font-bold tracking-tight">
-          İlişkiler & Bağlantılar
-        </h2>
+      <hr />
+
+      {/* --- SECTION 5: TAGS --- */}
+      <div className="space-y-4">
+        <h3 className="text-lg font-medium">Etiketler</h3>
+        <p className="text-sm text-muted-foreground">
+          Enter tuşuna basarak ekleyin.
+        </p>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* HOTEL SELECT */}
+          {/* Products */}
           <div className="space-y-2">
-            <Label>Konaklama (Otel)</Label>
-            {/* Added 'name' and 'defaultValue' */}
-            <Select
-              name="hotelId"
-              defaultValue={initialData?.hotelId || "no-selection"}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Otel Seçiniz..." />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="no-selection">(Seçim Yok)</SelectItem>
-                {hotelOptions.map((opt) => (
-                  <SelectItem key={opt.id} value={opt.id}>
-                    {opt.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <p className="text-xs text-muted-foreground">
-              Listede yok mu?{" "}
-              <a
-                href="/admin/hotels/new"
-                target="_blank"
-                className="text-blue-600 hover:underline"
-              >
-                Yeni Otel Ekle
-              </a>
-            </p>
-          </div>
-
-          {/* TOUR GALLERY SELECT */}
-          <div className="space-y-2">
-            <Label>Tur Galeri (Şehir/Gezi)</Label>
-            <Select
-              name="tourGalleryId"
-              defaultValue={initialData?.tourGalleryId || "no-selection"}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Galeri Seçiniz..." />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="no-selection">(Seçim Yok)</SelectItem>
-                {galleryOptions.map((opt) => (
-                  <SelectItem key={opt.id} value={opt.id}>
-                    {opt.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <p className="text-xs text-muted-foreground">
-              <a
-                href="/admin/galleries/new"
-                target="_blank"
-                className="text-blue-600 hover:underline"
-              >
-                Yeni Galeri Ekle
-              </a>
-            </p>
-          </div>
-
-          {/* VENUE GALLERY SELECT */}
-          <div className="space-y-2">
-            <Label>Fuar Alanı Galeri</Label>
-            <Select
-              name="venueGalleryId"
-              defaultValue={initialData?.venueGalleryId || "no-selection"}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Galeri Seçiniz..." />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="no-selection">(Seçim Yok)</SelectItem>
-                {galleryOptions.map((opt) => (
-                  <SelectItem key={opt.id} value={opt.id}>
-                    {opt.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* FAIR GALLERY SELECT */}
-          <div className="space-y-2">
-            <Label>Genel Fuar Görselleri</Label>
-            <Select
-              name="fairGalleryId"
-              defaultValue={initialData?.fairGalleryId || "no-selection"}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Galeri Seçiniz..." />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="no-selection">(Seçim Yok)</SelectItem>
-                {galleryOptions.map((opt) => (
-                  <SelectItem key={opt.id} value={opt.id}>
-                    {opt.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-      </div>
-
-      {/* --- SECTION 5: TAGS (Lists) --- */}
-      <div className="space-y-6 border p-6 rounded-lg bg-white shadow-sm">
-        <h2 className="text-xl font-bold tracking-tight">
-          Etiketler & Hizmetler
-        </h2>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="space-y-2">
-            <Label>Sergilenen Ürünler</Label>
-            <TagInput
-              placeholder="Örn: Tekstil, İplik..."
-              tags={products}
-              setTags={setProducts}
+            <Label>Sergilenen Ürün Grupları</Label>
+            <Input
+              placeholder="Örn: Tekstil Makineleri (Enter'a bas)"
+              onKeyDown={(e) => handleAddTag(e, products, setProducts)}
             />
+            <div className="flex flex-wrap gap-2 mt-2">
+              {products.map((tag, i) => (
+                <Badge key={i} variant="secondary" className="px-3 py-1">
+                  {tag}
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setProducts(products.filter((p) => p !== tag))
+                    }
+                    className="ml-2 hover:text-red-500"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              ))}
+            </div>
           </div>
+
+          {/* Services */}
           <div className="space-y-2">
-            <Label>Dahil Olan Hizmetler</Label>
-            <TagInput
-              placeholder="Örn: Uçak Bileti..."
-              tags={services}
-              setTags={setServices}
+            <Label>Fiyata Dahil Hizmetler</Label>
+            <Input
+              placeholder="Örn: Uçak Bileti (Enter'a bas)"
+              onKeyDown={(e) => handleAddTag(e, services, setServices)}
             />
+            <div className="flex flex-wrap gap-2 mt-2">
+              {services.map((tag, i) => (
+                <Badge
+                  key={i}
+                  variant="secondary"
+                  className="bg-blue-50 text-blue-700 px-3 py-1 hover:bg-blue-100"
+                >
+                  {tag}
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setServices(services.filter((p) => p !== tag))
+                    }
+                    className="ml-2 hover:text-red-500"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              ))}
+            </div>
           </div>
+
+          {/* Free Services */}
           <div className="space-y-2">
             <Label>Ücretsiz Hizmetler</Label>
-            <TagInput
-              placeholder="Örn: Rehberlik..."
-              tags={freeServices}
-              setTags={setFreeServices}
+            <Input
+              placeholder="Örn: Rehberlik (Enter'a bas)"
+              onKeyDown={(e) => handleAddTag(e, freeServices, setFreeServices)}
             />
+            <div className="flex flex-wrap gap-2 mt-2">
+              {freeServices.map((tag, i) => (
+                <Badge
+                  key={i}
+                  variant="secondary"
+                  className="bg-green-50 text-green-700 px-3 py-1 hover:bg-green-100"
+                >
+                  {tag}
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setFreeServices(freeServices.filter((p) => p !== tag))
+                    }
+                    className="ml-2 hover:text-red-500"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              ))}
+            </div>
           </div>
         </div>
       </div>
 
-      {/* --- SECTION 6: PACKAGES --- */}
-      <PackageManager packages={packages} setPackages={setPackages} />
+      <hr />
 
-      {/* SUBMIT BUTTON */}
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t flex justify-end gap-4 shadow-lg z-50">
-        <Button type="button" variant="outline">
-          İptal
-        </Button>
-        <Button type="submit" size="lg" disabled={isPending}>
-          {isPending ? "Oluşturuluyor..." : "Fuarı Oluştur"}
+      {/* --- SECTION 6: PACKAGES (Nested Form) --- */}
+      <PackageManager packages={packages} onChange={setPackages} />
+
+      {/* --- SUBMIT --- */}
+      <div className="flex justify-end pt-10 sticky bottom-0 bg-white p-4 border-t z-10 shadow-lg -mx-4 md:mx-0 rounded-t-lg">
+        <Button type="submit" size="lg" className="w-full md:w-auto">
+          {initialData ? "Değişiklikleri Kaydet" : "Fuarı Oluştur"}
         </Button>
       </div>
     </form>

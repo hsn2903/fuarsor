@@ -32,8 +32,10 @@ const RegisterForm = () => {
         onSuccess: (ctx) => {
           //redirect to the profile or sign in page
           setLoading(false);
-          toast.success("User registered successfully");
-          router.push("/profile");
+          toast.success(
+            "Hesabınız oluşturuldu. Lütfen email adresinize gelen linki tıklayarak hesabınızı aktifleştirin."
+          );
+          router.push("/auth/email-sent");
         },
         onError: (ctx) => {
           // display the error message

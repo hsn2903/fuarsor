@@ -1,5 +1,13 @@
+import GoUpButton from "@/components/layouts/public/go-up-button";
+import WhatsAppButton from "@/components/layouts/public/whatsapp-button";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import AboutSection from "@/features/public/landing/about-section";
+import CampaignsSection from "@/features/public/landing/campaigns";
+import FeaturedFairs from "@/features/public/landing/featured-fairs";
+import DefiniteDepartureTours from "@/features/public/landing/guaranteed-departure-tours";
+import HeroSection from "@/features/public/landing/hero-section";
+import PostsSection from "@/features/public/landing/posts-section";
 import prisma from "@/lib/prisma";
 import {
   UsersIcon,
@@ -8,12 +16,27 @@ import {
   LogInIcon,
 } from "lucide-react";
 import Link from "next/link";
+import { Suspense } from "react";
+import { Footer } from "react-day-picker";
+import { getFeaturedFairs } from "./_actions/fairs";
 
 export default async function Home() {
   const users = await prisma.user.findMany();
+  const posts = await prisma.post.findMany();
+  const featuredFairs = await getFeaturedFairs();
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(ellipse_at_top,var(--tw-gradient-stops))] from-sky-50 via-white to-white">
+    <div>
+      <HeroSection />
+      <CampaignsSection />
+      <DefiniteDepartureTours />
+      <AboutSection />
+      <FeaturedFairs />
+
+      <Suspense fallback={<p>Yükleniyor...</p>}>
+        <PostsSection posts={posts} />
+      </Suspense>
+
       <main className="container mx-auto px-4 py-24 flex flex-col items-center">
         {/* Hero Section */}
         <div className="text-center space-y-4 mb-12">
@@ -88,6 +111,9 @@ export default async function Home() {
           </div>
         </div>
       </main>
+      <WhatsAppButton />
+      <GoUpButton />
+      <Footer />
     </div>
   );
 }

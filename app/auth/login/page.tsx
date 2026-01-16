@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/card";
 import Image from "next/image";
 import { APP_NAME } from "@/lib/constants";
+import SocialButtons from "../_components/social-buttons";
 
 export const metadata: Metadata = {
   title: "Login",
@@ -19,22 +20,26 @@ const LoginPage = () => {
   return (
     <div className="w-full max-w-md mx-auto">
       <Card>
-        <CardHeader className="space-y-4">
-          <Link href="/" className="flex items-center justify-center">
-            <Image
-              priority={true}
-              src="/images/logo.svg"
-              width={100}
-              height={100}
-              alt={`${APP_NAME} logo`}
-            />
-          </Link>
-          <CardTitle className="text-center">Sign In</CardTitle>
-          <CardDescription className="text-center">
-            Select a method to sign in to your account
-          </CardDescription>
+        <CardHeader>
+          <CardTitle className="text-2xl font-bold">Giriş Yap</CardTitle>
+          <CardDescription>Email ve şifreniz ile devam edin.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
+          {/* 1. Add Social Buttons */}
+          <SocialButtons />
+
+          {/* 2. Add Separator */}
+          <div className="relative my-4">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-white px-2 text-muted-foreground">
+                Veya email ile devam et
+              </span>
+            </div>
+          </div>
+
           <LoginForm />
         </CardContent>
       </Card>

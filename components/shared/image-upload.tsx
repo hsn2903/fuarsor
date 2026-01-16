@@ -10,7 +10,7 @@ interface ImageUploadProps {
   disabled?: boolean;
   onChange: (value: string) => void;
   onRemove: (value: string) => void;
-  value: string[]; // We use an array to support multiple images if needed later
+  value: string[];
 }
 
 export default function ImageUpload({

@@ -1,4 +1,4 @@
-"use server"; // <--- CRITICAL: This tells Next.js this code runs on the Server
+"use server"; // <--- CRITICAL: Marks this as Server Code
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -7,14 +7,12 @@ import prisma from "@/lib/prisma";
 
 // --- CREATE ACTION ---
 export async function createGalleryAction(prevState: any, formData: FormData) {
-  // 1. Extract and Parse Data
-  // Native HTML forms cannot send Arrays directly. We will send the images
-  // as a JSON string (e.g., '["url1", "url2"]') and parse it here.
+  // 1. Transform FormData
+  // HTML forms can't send Arrays natively. We will send images as a JSON string.
   const rawImages = formData.get("imageUrls");
   const parsedImages =
     typeof rawImages === "string" ? JSON.parse(rawImages) : [];
 
-  // Construct a raw object from the form data
   const rawData = {
     name: formData.get("name"),
     description: formData.get("description"),
@@ -22,39 +20,34 @@ export async function createGalleryAction(prevState: any, formData: FormData) {
     imageUrls: parsedImages,
   };
 
-  // 2. Validate Data (The Gatekeeper)
+  // 2. Validate Data
   const validated = gallerySchema.safeParse(rawData);
 
-  // If validation fails, return errors to the UI
   if (!validated.success) {
+    // If invalid, return errors to the UI
     return {
-      error: "Validasyon Hatası. Lütfen formu kontrol edin.",
+      error: "Validasyon Hatası",
       fieldErrors: validated.error.flatten().fieldErrors,
     };
   }
 
-  // 3. Database Operation (The Worker)
-  const { data } = validated; // Clean, type-safe data
-
+  // 3. Save to Database
   try {
     await prisma.gallery.create({
       data: {
-        name: data.name,
-        description: data.description,
-        type: data.type,
-        imageUrls: data.imageUrls,
+        name: validated.data.name,
+        description: validated.data.description,
+        type: validated.data.type,
+        imageUrls: validated.data.imageUrls,
       },
     });
   } catch (error) {
     console.error("Gallery Create Error:", error);
-    return { error: "Veritabanı hatası oluştu. Lütfen tekrar deneyin." };
+    return { error: "Veritabanı hatası oluştu." };
   }
 
-  // 4. Cleanup
-  // Clear the cache for the list page so the new gallery shows up immediately
+  // 4. Refresh Cache & Redirect
   revalidatePath("/admin/galleries");
-
-  // Send the user back to the list
   redirect("/admin/galleries");
 }
 
@@ -65,19 +58,60 @@ export async function deleteGalleryAction(id: string) {
       where: { id },
     });
 
-    // Refresh the list page to remove the deleted item
+    // Refresh the list to remove the deleted item
     revalidatePath("/admin/galleries");
-    return { success: "Galeri başarıyla silindi." };
+    return { success: "Galeri silindi." };
   } catch (error) {
-    return { error: "Galeri silinirken bir hata oluştu." };
+    return { error: "Silinemedi. Bu galeri bir fuarda kullanılıyor olabilir." };
   }
 }
 
-// --- HELPER: FETCH FOR DROPDOWN ---
-export async function getGalleryOptions() {
-  const galleries = await prisma.gallery.findMany({
-    select: { id: true, name: true }, // Select ONLY what we need
-    orderBy: { name: "asc" },
-  });
-  return galleries;
+// --- UPDATE ACTION ---
+export async function updateGalleryAction(
+  id: string, // We need the ID as the first argument
+  prevState: any,
+  formData: FormData
+) {
+  // 1. Transform FormData
+  const rawImages = formData.get("imageUrls");
+  const parsedImages =
+    typeof rawImages === "string" ? JSON.parse(rawImages) : [];
+
+  const rawData = {
+    name: formData.get("name"),
+    description: formData.get("description"),
+    type: formData.get("type"), // Zod will check if this is valid ENUM
+    imageUrls: parsedImages,
+  };
+
+  // 2. Validate Data
+  const validated = gallerySchema.safeParse(rawData);
+
+  if (!validated.success) {
+    return {
+      error: "Validasyon Hatası",
+      fieldErrors: validated.error.flatten().fieldErrors,
+    };
+  }
+
+  // 3. Database Update
+  try {
+    await prisma.gallery.update({
+      where: { id }, // Find the record by ID
+      data: {
+        name: validated.data.name,
+        description: validated.data.description,
+        type: validated.data.type,
+        imageUrls: validated.data.imageUrls,
+      },
+    });
+  } catch (error) {
+    console.error("Gallery Update Error:", error);
+    return { error: "Güncelleme sırasında bir hata oluştu." };
+  }
+
+  // 4. Refresh & Redirect
+  revalidatePath("/admin/galleries");
+  revalidatePath(`/admin/galleries/${id}/edit`); // Clear cache for the edit page itself
+  redirect("/admin/galleries");
 }

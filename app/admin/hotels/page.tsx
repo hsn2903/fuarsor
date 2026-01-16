@@ -1,4 +1,5 @@
 import Link from "next/link";
+import prisma from "@/lib/prisma";
 import { Button } from "@/components/ui/button";
 import { Plus, Building2 } from "lucide-react";
 import {
@@ -12,13 +13,11 @@ import {
 import HotelRowActions from "@/features/hotels/components/hotel-row-actions";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
-import prisma from "@/lib/prisma";
 
 export default async function HotelsPage() {
-  // 1. Fetch Data
+  // Fetch Data with usage count
   const hotels = await prisma.hotel.findMany({
     orderBy: { createdAt: "desc" },
-    // Efficiently count how many fairs are linked to this hotel
     include: {
       _count: {
         select: { fairs: true },
@@ -28,7 +27,6 @@ export default async function HotelsPage() {
 
   return (
     <div className="space-y-6 p-6">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Oteller</h1>
@@ -43,7 +41,6 @@ export default async function HotelsPage() {
         </Link>
       </div>
 
-      {/* Table */}
       <div className="rounded-md border bg-white shadow-sm">
         <Table>
           <TableHeader>
@@ -58,7 +55,6 @@ export default async function HotelsPage() {
           </TableHeader>
           <TableBody>
             {hotels.length === 0 ? (
-              // Empty State
               <TableRow>
                 <TableCell
                   colSpan={6}
@@ -71,7 +67,6 @@ export default async function HotelsPage() {
                 </TableCell>
               </TableRow>
             ) : (
-              // Data Rows
               hotels.map((hotel) => (
                 <TableRow key={hotel.id}>
                   <TableCell className="font-medium text-base">
