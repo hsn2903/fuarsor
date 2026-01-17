@@ -17,6 +17,7 @@ import {
   BookIcon,
   SpeakerIcon,
   MegaphoneIcon,
+  MessageSquareIcon,
 } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
@@ -65,12 +66,12 @@ const routes = [
     href: "/admin/super-admin",
     color: "text-sky-500",
   },
-  // {
-  //   label: "Kullanıcılar",
-  //   icon: UsersIcon,
-  //   href: "/admin/users",
-  //   color: "text-sky-500",
-  // },
+  {
+    label: "Mesajlar",
+    icon: MessageSquareIcon,
+    href: "/admin/messages",
+    color: "text-sky-500",
+  },
 ];
 
 export default function AdminSidebar() {
