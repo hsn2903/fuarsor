@@ -14,6 +14,9 @@ import {
   LockIcon,
   UserIcon,
   UsersIcon,
+  BookIcon,
+  SpeakerIcon,
+  MegaphoneIcon,
 } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
@@ -30,32 +33,44 @@ const routes = [
     label: "Fuarlar",
     icon: CalendarDays,
     href: "/admin/fairs",
-    color: "text-violet-500",
+    color: "text-sky-500",
   },
   {
     label: "Oteller",
     icon: Building2,
     href: "/admin/hotels",
-    color: "text-pink-700",
+    color: "text-sky-500",
   },
   {
     label: "Galeriler",
     icon: ImageIcon,
     href: "/admin/galleries",
-    color: "text-orange-700",
+    color: "text-sky-500",
+  },
+  {
+    label: "Blog",
+    icon: BookIcon,
+    href: "/admin/posts",
+    color: "text-sky-500",
+  },
+  {
+    label: "Kampanyalar",
+    icon: MegaphoneIcon,
+    href: "/admin/campaigns",
+    color: "text-sky-500",
   },
   {
     label: "Admin",
     icon: LockIcon,
     href: "/admin/super-admin",
-    color: "text-orange-700",
+    color: "text-sky-500",
   },
-  {
-    label: "Kullanıcılar",
-    icon: UsersIcon,
-    href: "/admin/users",
-    color: "text-orange-700",
-  },
+  // {
+  //   label: "Kullanıcılar",
+  //   icon: UsersIcon,
+  //   href: "/admin/users",
+  //   color: "text-sky-500",
+  // },
 ];
 
 export default function AdminSidebar() {
