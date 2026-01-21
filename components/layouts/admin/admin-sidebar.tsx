@@ -3,76 +3,12 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import {
-  LayoutDashboard,
-  CalendarDays,
-  Building2,
-  ImageIcon,
-  Settings,
-  LogOut,
-  Plane,
-  LockIcon,
-  UserIcon,
-  UsersIcon,
-  BookIcon,
-  SpeakerIcon,
-  MegaphoneIcon,
-  MessageSquareIcon,
-} from "lucide-react";
+import { Settings, LogOut, Plane } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
+import { ADMIN_ROUTES } from "@/lib/routes";
 
 // Define navigation items in one place
-const routes = [
-  {
-    label: "Panel Özeti",
-    icon: LayoutDashboard,
-    href: "/admin",
-    color: "text-sky-500",
-  },
-  {
-    label: "Fuarlar",
-    icon: CalendarDays,
-    href: "/admin/fairs",
-    color: "text-sky-500",
-  },
-  {
-    label: "Oteller",
-    icon: Building2,
-    href: "/admin/hotels",
-    color: "text-sky-500",
-  },
-  {
-    label: "Galeriler",
-    icon: ImageIcon,
-    href: "/admin/galleries",
-    color: "text-sky-500",
-  },
-  {
-    label: "Blog",
-    icon: BookIcon,
-    href: "/admin/posts",
-    color: "text-sky-500",
-  },
-  {
-    label: "Kampanyalar",
-    icon: MegaphoneIcon,
-    href: "/admin/campaigns",
-    color: "text-sky-500",
-  },
-  {
-    label: "Admin",
-    icon: LockIcon,
-    href: "/admin/super-admin",
-    color: "text-sky-500",
-  },
-  {
-    label: "Mesajlar",
-    icon: MessageSquareIcon,
-    href: "/admin/messages",
-    color: "text-sky-500",
-  },
-];
 
 export default function AdminSidebar() {
   const pathname = usePathname();
@@ -103,7 +39,7 @@ export default function AdminSidebar() {
 
         {/* 2. Navigation Links */}
         <div className="space-y-1">
-          {routes.map((route) => (
+          {ADMIN_ROUTES.map((route) => (
             <Link
               key={route.href}
               href={route.href}

@@ -252,3 +252,14 @@ model Message {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @default(now())
 }
+
+// --- 6. SEO ---
+model SeoPage {
+  id          String   @id @default(cuid())
+  url         String?  @unique
+  title       String?
+  description String?
+  keywords    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
