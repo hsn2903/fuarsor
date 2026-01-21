@@ -2,19 +2,6 @@ import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import prisma from "./prisma";
 import { nextCookies } from "better-auth/next-js";
-import nodemailer from "nodemailer";
-import { sendEmail } from "./email";
-
-// 1. Create the Transporter
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: Number(process.env.SMTP_PORT),
-  secure: false, // true for 465, false for other ports
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
-  },
-});
 
 export const auth = betterAuth({
   database: prismaAdapter(prisma, {
@@ -24,7 +11,6 @@ export const auth = betterAuth({
   // 1. Enable Email/Password Auth
   emailAndPassword: {
     enabled: true,
-    requireEmailVerification: true,
   },
 
   socialProviders: {
