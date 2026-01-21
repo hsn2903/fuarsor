@@ -1,5 +1,5 @@
 import AdminSidebar from "@/components/layouts/admin/admin-sidebar";
-import Navbar from "@/components/layouts/admin/navbar";
+// import Navbar from "@/components/layouts/admin/navbar";
 
 export default function AdminLayout({
   children,
@@ -17,7 +17,7 @@ export default function AdminLayout({
       {/* 2. Main Content Area */}
       {/* Pushed to right by 72 (md:pl-72) to make room for sidebar */}
       <main className="md:pl-72 h-full flex flex-col min-h-screen">
-        <Navbar />
+        {/* <Navbar /> */}
 
         {/* Render the specific page content here */}
         <div className="flex-1 p-8 overflow-y-auto">{children}</div>
