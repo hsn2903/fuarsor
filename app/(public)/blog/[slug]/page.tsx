@@ -4,8 +4,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import Image from "next/image";
 import { Calendar, Clock, Facebook, Instagram, Twitter } from "lucide-react";
 import Link from "next/link";
-import ContactForm from "../../_components/contact-form";
-import { getBlogBySlug } from "@/app/_actions/blogs";
+import { getPostBySlug } from "@/features/posts/actions";
+import ContactForm from "@/components/shared/contact-form";
 
 export const metadata = {
   title: "Blog",
@@ -17,7 +17,7 @@ const BlogDetailPage = async ({
   params: Promise<{ slug: string }>;
 }) => {
   const blogSlug = (await params).slug;
-  const blog = await getBlogBySlug(blogSlug);
+  const blog = await getPostBySlug(blogSlug);
 
   return (
     <main className="container mx-auto px-4 py-8">
@@ -26,7 +26,7 @@ const BlogDetailPage = async ({
           <article className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
             <div className="relative aspect-video">
               <Image
-                src={blog?.image || "/images/hero.jpg"}
+                src={blog?.coverImage || "/images/hero.jpg"}
                 alt={blog?.title || "Makale resmi"}
                 layout="fill"
                 objectFit="cover"
@@ -64,7 +64,7 @@ const BlogDetailPage = async ({
               <CardContent className="p-6">
                 <div className="flex items-center mb-4">
                   <Avatar className="h-12 w-12 mr-4">
-                    <AvatarImage src={blog?.image || ""} alt="" />
+                    <AvatarImage src={blog?.coverImage || ""} alt="" />
                     <AvatarFallback>{blog?.title.charAt(0)}</AvatarFallback>
                   </Avatar>
                   <div>

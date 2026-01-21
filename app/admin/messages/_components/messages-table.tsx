@@ -3,6 +3,7 @@ import {
   markMessageAsRead,
   markMessageAsUnread,
 } from "@/app/_actions/messages";
+import { Message } from "@/app/generated/prisma/client";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -12,7 +13,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Message } from "@/lib/generated/prisma";
 import {
   MailIcon,
   CheckCircle2Icon,

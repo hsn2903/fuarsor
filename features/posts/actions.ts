@@ -31,7 +31,7 @@ export type PostFormState = {
 // Note: We added 'prevState' as the first argument, which is required by useActionState
 export async function createPost(
   prevState: PostFormState,
-  formData: FormData
+  formData: FormData,
 ): Promise<PostFormState> {
   const rawData = {
     title: formData.get("title") as string,
@@ -86,7 +86,7 @@ export async function createPost(
 
 export async function updatePost(
   prevState: PostFormState,
-  formData: FormData
+  formData: FormData,
 ): Promise<PostFormState> {
   const id = formData.get("id") as string;
 
@@ -165,3 +165,10 @@ export async function togglePostStatus(id: string, isPublished: boolean) {
 
   revalidatePath("/admin/posts");
 }
+
+// Get blog by slug
+export const getPostBySlug = async (slug: string) => {
+  const post = await prisma.post.findFirst({ where: { slug: slug } });
+
+  return post;
+};
