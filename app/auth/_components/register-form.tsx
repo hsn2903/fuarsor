@@ -19,10 +19,10 @@ const RegisterForm = () => {
     e.preventDefault();
     await authClient.signUp.email(
       {
-        email, // user email address
-        password, // user password -> min 8 characters by default
-        name, // user display name
-        callbackURL: "/profile", // A URL to redirect to after the user verifies their email (optional)
+        email,
+        password,
+        name,
+        callbackURL: "/admin",
       },
       {
         onRequest: (ctx) => {
@@ -33,16 +33,15 @@ const RegisterForm = () => {
           //redirect to the profile or sign in page
           setLoading(false);
           toast.success(
-            "Hesabınız oluşturuldu. Lütfen email adresinize gelen linki tıklayarak hesabınızı aktifleştirin."
+            "Hesabınız oluşturuldu. Lütfen email adresinize gelen linki tıklayarak hesabınızı aktifleştirin.",
           );
           router.push("/auth/email-sent");
         },
         onError: (ctx) => {
-          // display the error message
           setLoading(false);
           toast.error(ctx.error.message);
         },
-      }
+      },
     );
   };
 

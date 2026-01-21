@@ -8,9 +8,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import Image from "next/image";
-import { APP_NAME } from "@/lib/constants";
-import SocialButtons from "../_components/social-buttons";
+// import Image from "next/image";
+// import { APP_NAME } from "@/lib/constants";
+// import SocialButtons from "../_components/social-buttons";
 
 export const metadata: Metadata = {
   title: "Login",
@@ -26,10 +26,10 @@ const LoginPage = () => {
         </CardHeader>
         <CardContent className="space-y-4">
           {/* 1. Add Social Buttons */}
-          <SocialButtons />
+          {/* <SocialButtons /> */}
 
           {/* 2. Add Separator */}
-          <div className="relative my-4">
+          {/* <div className="relative my-4">
             <div className="absolute inset-0 flex items-center">
               <span className="w-full border-t" />
             </div>
@@ -38,7 +38,7 @@ const LoginPage = () => {
                 Veya email ile devam et
               </span>
             </div>
-          </div>
+          </div> */}
 
           <LoginForm />
         </CardContent>

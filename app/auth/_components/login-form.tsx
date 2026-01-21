@@ -22,7 +22,7 @@ const LoginForm = () => {
       {
         email,
         password,
-        callbackURL: "/profile",
+        callbackURL: "/admin",
         rememberMe: true,
       },
       {
@@ -32,13 +32,13 @@ const LoginForm = () => {
         onSuccess: (ctx) => {
           setLoading(false);
           toast.success("User signed in successfully");
-          router.push("/profile");
+          router.push("/admin");
         },
         onError: (ctx) => {
           setLoading(false);
           toast.error(ctx.error.message);
         },
-      }
+      },
     );
   };
   return (
