@@ -59,4 +59,6 @@ export const auth = betterAuth({
       website: { type: "string", required: false, input: true },
     },
   },
+
+  trustedOrigins: ["https://fuarsor.vercel.app", "http://localhost:3000"],
 });
