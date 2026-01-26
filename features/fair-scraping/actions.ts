@@ -3,6 +3,7 @@
 import * as cheerio from "cheerio";
 import { DraftFair } from "./types";
 import { slugify, addDays } from "@/lib/utils";
+import prisma from "@/lib/prisma";
 
 export async function scrapeTradeShows(): Promise<{
   success: boolean;
@@ -97,9 +98,8 @@ export async function saveTradeShow(fairData: DraftFair) {
     // UI için kullandığımız geçici ID'yi veritabanına göndermiyoruz.
     // Prisma kendi UUID'sini oluşturacak.
 
-    // const { id, ...dataToSave } = fairData;
+    const { id, ...dataToSave } = fairData;
 
-    /* GERÇEK PRISMA KODU:
     const newFair = await prisma.fair.create({
       data: {
         name: dataToSave.name,
@@ -111,9 +111,8 @@ export async function saveTradeShow(fairData: DraftFair) {
         endDate: dataToSave.endDate,
         status: "Beklemede",
         // Prisma modelindeki diğer alanlar default değerlerini alacak
-      }
+      },
     });
-    */
 
     console.log("Prisma Modeline Uygun Kayıt:", {
       name: fairData.name,
