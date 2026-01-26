@@ -1,28 +1,41 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import prisma from "@/lib/prisma";
 import { ChevronRight } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
-export default function CampaignsSection() {
-  const campaigns = [
-    {
-      id: 1,
-      title: "Yaz Tatili Erken Rezervasyon",
-      description:
-        "2024 yaz tatilinizi şimdiden planlayın, %30'a varan indirimlerden yararlanın!",
-      imageUrl: "/images/hero.jpg",
-      link: "/campaigns/summer-early-booking",
+export default async function CampaignsSection() {
+  const campaigns = await prisma.campaign.findMany({
+    where: {
+      isPublished: true,
     },
-    {
-      id: 2,
-      title: "Kültür Turlarında Büyük Fırsat",
-      description:
-        "Türkiye'nin tarihi ve kültürel zenginliklerini keşfedin, ikinci kişi %50 indirimli!",
-      imageUrl: "/images/hero.jpg",
-      link: "/campaigns/cultural-tours-discount",
+    orderBy: {
+      createdAt: "desc",
     },
-  ];
+  });
+  // const campaigns = [
+  //   {
+  //     id: 1,
+  //     title: "Yaz Tatili Erken Rezervasyon",
+  //     description:
+  //       "2024 yaz tatilinizi şimdiden planlayın, %30'a varan indirimlerden yararlanın!",
+  //     imageUrl: "/images/hero.jpg",
+  //     link: "/campaigns/summer-early-booking",
+  //   },
+  //   {
+  //     id: 2,
+  //     title: "Kültür Turlarında Büyük Fırsat",
+  //     description:
+  //       "Türkiye'nin tarihi ve kültürel zenginliklerini keşfedin, ikinci kişi %50 indirimli!",
+  //     imageUrl: "/images/hero.jpg",
+  //     link: "/campaigns/cultural-tours-discount",
+  //   },
+  // ];
+
+  if (!campaigns) {
+    return null;
+  }
 
   return (
     <section className="py-16 bg-gray-100 dark:bg-gray-900">
@@ -47,8 +60,8 @@ export default function CampaignsSection() {
               <CardContent className="p-0">
                 <div className="relative aspect-2/1">
                   <Image
-                    src={campaign.imageUrl}
-                    alt={campaign.title}
+                    src={campaign?.image || "/images/hero.jpg"}
+                    alt={campaign?.name || ""}
                     fill
                     sizes="(max-width: 768px) 100vw, 50vw"
                     className="object-cover transition-transform duration-300 hover:scale-105"
@@ -56,10 +69,12 @@ export default function CampaignsSection() {
                   <div className="absolute inset-0 bg-linear-to-t from-black/60 to-transparent" />
                   <div className="absolute bottom-0 left-0 right-0 p-6">
                     <h3 className="text-2xl font-bold text-white mb-2">
-                      {campaign.title}
+                      {campaign?.name || ""}
                     </h3>
-                    <p className="text-gray-200 mb-4">{campaign.description}</p>
-                    <Link href={campaign.link}>
+                    <p className="text-gray-200 mb-4">
+                      {campaign?.description || ""}
+                    </p>
+                    <Link href={`/kampanyalar/${campaign?.id}`}>
                       <Button>Detayları Gör</Button>
                     </Link>
                   </div>

@@ -57,10 +57,11 @@ export const CellAction = ({ data }: CellActionProps) => {
       <AlertDialog open={open} onOpenChange={setOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogTitle>
+              Kampanyayı Silmek İstediğinize Emin Misiniz?
+            </AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the
-              campaign.
+              Bu eylem geri alınamaz. Bu kampanyayı kalıcı olarak siler.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -70,7 +71,7 @@ export const CellAction = ({ data }: CellActionProps) => {
               className="bg-red-600 hover:bg-red-700"
               disabled={loading}
             >
-              Delete
+              Sil
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -84,20 +85,20 @@ export const CellAction = ({ data }: CellActionProps) => {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuLabel>Actions</DropdownMenuLabel>
+          <DropdownMenuLabel>İşlemler</DropdownMenuLabel>
           <DropdownMenuItem onClick={() => onCopy(data.id)}>
             <Copy className="mr-2 h-4 w-4" />
-            Copy ID
+            ID Kopyala
           </DropdownMenuItem>
           <DropdownMenuItem
             onClick={() => router.push(`/admin/campaigns/${data.id}/edit`)}
           >
             <Edit className="mr-2 h-4 w-4" />
-            Edit
+            Düzenle
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => setOpen(true)}>
             <Trash className="mr-2 h-4 w-4" />
-            Delete
+            Sil
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

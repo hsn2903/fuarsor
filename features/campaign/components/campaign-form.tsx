@@ -101,15 +101,6 @@ export const CampaignForm = ({ initialData }: CampaignFormProps) => {
     <>
       {/* Header Section */}
       <div className="flex items-center justify-between mb-8">
-        <div className="space-y-1">
-          <h2 className="text-2xl font-bold">
-            {initialData ? "Edit Campaign" : "Create Campaign"}
-          </h2>
-          <p className="text-sm text-muted-foreground">
-            {initialData ? "Edit existing details" : "Add a new campaign"}
-          </p>
-        </div>
-
         {/* Only show Delete button if we are editing */}
         {initialData && (
           <AlertDialog>
@@ -120,19 +111,20 @@ export const CampaignForm = ({ initialData }: CampaignFormProps) => {
             </AlertDialogTrigger>
             <AlertDialogContent>
               <AlertDialogHeader>
-                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                <AlertDialogTitle>
+                  Kampanyayı Silmek İstediğinize Emin Misiniz?
+                </AlertDialogTitle>
                 <AlertDialogDescription>
-                  This action cannot be undone. This will permanently delete the
-                  campaign.
+                  Bu eylem geri alınamaz. Bu kampanyayı kalıcı olarak siler.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogCancel>İptal</AlertDialogCancel>
                 <AlertDialogAction
                   onClick={onDelete}
                   className="bg-red-600 hover:bg-red-700"
                 >
-                  Delete
+                  Sil
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
@@ -151,7 +143,7 @@ export const CampaignForm = ({ initialData }: CampaignFormProps) => {
 
         {/* Image Upload */}
         <div className="space-y-2">
-          <Label>Background Image</Label>
+          <Label>Arkaplan Resmi</Label>
           <ImageUpload
             value={formData.image ? [formData.image] : []}
             disabled={loading}
@@ -166,7 +158,7 @@ export const CampaignForm = ({ initialData }: CampaignFormProps) => {
         <div className="grid gap-8 md:grid-cols-2">
           {/* Name Field */}
           <div className="space-y-2">
-            <Label htmlFor="name">Campaign Name</Label>
+            <Label htmlFor="name">Kampanya Adı</Label>
             <Input
               id="name"
               disabled={loading}
@@ -191,9 +183,9 @@ export const CampaignForm = ({ initialData }: CampaignFormProps) => {
               }
             />
             <div className="space-y-1 leading-none">
-              <Label htmlFor="isPublished">Published</Label>
+              <Label htmlFor="isPublished">Yayımlandı</Label>
               <p className="text-sm text-muted-foreground">
-                This campaign will appear on the home page.
+                Bu kampanya ana sayfada görünecek.
               </p>
             </div>
           </div>
@@ -201,11 +193,11 @@ export const CampaignForm = ({ initialData }: CampaignFormProps) => {
 
         {/* Description Field */}
         <div className="space-y-2">
-          <Label htmlFor="description">Description</Label>
+          <Label htmlFor="description">Açıklama</Label>
           <Textarea
             id="description"
             disabled={loading}
-            placeholder="Describe your campaign..."
+            placeholder="Kampanyanızı tanımlayın..."
             value={formData.description}
             onChange={(e) =>
               setFormData({ ...formData, description: e.target.value })
@@ -217,7 +209,7 @@ export const CampaignForm = ({ initialData }: CampaignFormProps) => {
         </div>
 
         <Button disabled={loading} type="submit" className="ml-auto">
-          {initialData ? "Save Changes" : "Create Campaign"}
+          {initialData ? "Değişiklikleri Kaydet" : "Kampanyayı Oluştur"}
         </Button>
       </form>
     </>

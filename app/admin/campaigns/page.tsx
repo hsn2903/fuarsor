@@ -23,11 +23,11 @@ export default async function CampaignsPage() {
   return (
     <div className="p-6">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">Campaigns</h1>
+        <h1 className="text-2xl font-bold">Kampanyalar</h1>
         <Link href="/admin/campaigns/new">
           <Button>
             <Plus className="h-4 w-4 mr-2" />
-            Add New
+            Yeni Kampanya
           </Button>
         </Link>
       </div>
@@ -36,18 +36,18 @@ export default async function CampaignsPage() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Image</TableHead>
-              <TableHead>Name</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Created At</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead>Resim</TableHead>
+              <TableHead>Adı</TableHead>
+              <TableHead>Durum</TableHead>
+              <TableHead>Oluşturulma Tarihi</TableHead>
+              <TableHead className="text-right">Eylemler</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {campaigns.length === 0 && (
               <TableRow>
                 <TableCell colSpan={5} className="text-center h-24">
-                  No campaigns found.
+                  Kampanya bulunamadı.
                 </TableCell>
               </TableRow>
             )}
@@ -67,11 +67,11 @@ export default async function CampaignsPage() {
                 <TableCell>
                   {item.isPublished ? (
                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                      Published
+                      Yayımlandı
                     </span>
                   ) : (
                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                      Draft
+                      Taslak
                     </span>
                   )}
                 </TableCell>

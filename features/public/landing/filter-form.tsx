@@ -27,7 +27,7 @@ export default function FilterForm() {
 
   const [type, setType] = useState(searchParams.get("fuarTur") || "");
   const [category, setCategory] = useState(
-    searchParams.get("fuarKategori") || ""
+    searchParams.get("fuarKategori") || "",
   );
   const [name, setName] = useState(searchParams.get("fuarIsmi") || "");
 
@@ -49,7 +49,7 @@ export default function FilterForm() {
           onSubmit={handleSearch}
           className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 rounded-[4px] bg-[#ffffff70]"
         >
-          <div className="space-y-2">
+          <div>
             {/* <label htmlFor="fairName" className="text-sm font-medium">
               Fuar Adı?
             </label> */}
@@ -63,7 +63,7 @@ export default function FilterForm() {
             />
           </div>
 
-          <div className="space-y-2">
+          <div>
             {/* <label htmlFor="fairType" className="text-sm font-medium">
               Fuar Türü
             </label> */}
@@ -84,7 +84,7 @@ export default function FilterForm() {
             </Select>
           </div>
 
-          <div className="space-y-2">
+          <div>
             {/* <label htmlFor="fairCategory" className="text-sm font-medium">
               Fuar Sektörleri
             </label> */}
