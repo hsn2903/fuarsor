@@ -49,7 +49,7 @@ export default function AdminSidebar() {
                 pathname === route.href ||
                   (route.href !== "/admin" && pathname.startsWith(route.href))
                   ? "text-white bg-white/10"
-                  : "text-zinc-400"
+                  : "text-zinc-400",
               )}
             >
               <div className="flex items-center flex-1">
@@ -64,15 +64,15 @@ export default function AdminSidebar() {
       {/* 3. Bottom Actions (Settings/Logout) */}
       <div className="px-3 py-2 border-t border-white/10">
         <div className="space-y-1">
-          <Link
+          {/* <Link
             href="/admin/settings"
             className="text-zinc-400 hover:text-white hover:bg-white/10 flex p-3 w-full rounded-lg transition text-sm font-medium"
           >
             <Settings className="h-5 w-5 mr-3" />
             Ayarlar
-          </Link>
+          </Link> */}
           <button
-            onClick={handleLogout} // <--- Add onClick
+            onClick={handleLogout}
             className="text-zinc-400 hover:text-red-400 hover:bg-white/10 flex p-3 w-full rounded-lg transition text-sm font-medium text-left"
           >
             <LogOut className="h-5 w-5 mr-3" />
