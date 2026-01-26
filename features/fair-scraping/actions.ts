@@ -95,22 +95,23 @@ export async function scrapeTradeShows(): Promise<{
 
 export async function saveTradeShow(fairData: DraftFair) {
   try {
-    // UI için kullandığımız geçici ID'yi veritabanına göndermiyoruz.
-    // Prisma kendi UUID'sini oluşturacak.
-
     const { id, ...dataToSave } = fairData;
+
+    // Açıklama kısmını daha detaylı ve anlamlı hale getirme işlemi
+    const detailedDescription = dataToSave.description
+      ? `${dataToSave.name} - ${dataToSave.venue} lokasyonunda düzenlenecek olan bu fuar, sektör profesyonellerini bir araya getirmeyi hedefliyor. Detaylar: ${dataToSave.description}`
+      : `${dataToSave.name} fuarı, ${dataToSave.startDate} tarihinde kapılarını açıyor. ${dataToSave.venue} alanında gerçekleşecek bu etkinlik için hazırlıklar devam ediyor.`;
 
     const newFair = await prisma.fair.create({
       data: {
         name: dataToSave.name,
         slug: dataToSave.slug,
-        description: dataToSave.description,
+        description: detailedDescription,
         venue: dataToSave.venue,
         website: dataToSave.website,
         startDate: dataToSave.startDate,
         endDate: dataToSave.endDate,
         status: "Beklemede",
-        // Prisma modelindeki diğer alanlar default değerlerini alacak
       },
     });
 
