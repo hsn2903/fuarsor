@@ -19,32 +19,50 @@ export function Pagination({
   return (
     <div className="flex items-center justify-end gap-2 mt-4">
       <span className="text-sm text-muted-foreground mr-4">
-        Page {currentPage} of {totalPages}
+        {currentPage} / {totalPages}
       </span>
 
-      <Button variant="outline" size="sm" disabled={!hasPrev} asChild={hasPrev}>
+      <Button
+        variant="outline"
+        size="sm"
+        className="cursor-pointer w-24"
+        disabled={!hasPrev}
+        asChild={hasPrev}
+      >
         {hasPrev ? (
-          <Link href={`${baseUrl}?page=${currentPage - 1}`}>
+          <Link
+            href={`${baseUrl}?page=${currentPage - 1}`}
+            className="flex items-center gap-2"
+          >
             <ChevronLeft className="h-4 w-4" />
-            Previous
+            Önceki
           </Link>
         ) : (
-          <span>
+          <span className="flex items-center gap-2">
             <ChevronLeft className="h-4 w-4" />
-            Previous
+            Önceki
           </span>
         )}
       </Button>
 
-      <Button variant="outline" size="sm" disabled={!hasNext} asChild={hasNext}>
+      <Button
+        variant="outline"
+        size="sm"
+        className="cursor-pointer w-24"
+        disabled={!hasNext}
+        asChild={hasNext}
+      >
         {hasNext ? (
-          <Link href={`${baseUrl}?page=${currentPage + 1}`}>
-            Next
+          <Link
+            href={`${baseUrl}?page=${currentPage + 1}`}
+            className="flex items-center gap-2"
+          >
+            Sonraki
             <ChevronRight className="h-4 w-4" />
           </Link>
         ) : (
-          <span>
-            Next
+          <span className="flex items-center gap-2">
+            Sonraki
             <ChevronRight className="h-4 w-4" />
           </span>
         )}

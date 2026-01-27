@@ -135,7 +135,7 @@ export default async function PostsPage({ searchParams }: PostsPageProps) {
       <Pagination
         currentPage={currentPage}
         totalPages={totalPages}
-        baseUrl="/dashboard/posts"
+        baseUrl="/admin/posts"
       />
     </div>
   );
