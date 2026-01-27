@@ -5,7 +5,7 @@ import Link from "next/link";
 interface PaginationProps {
   currentPage: number;
   totalPages: number;
-  baseUrl: string; // To make this reusable for other lists
+  baseUrl: string;
 }
 
 export function Pagination({
