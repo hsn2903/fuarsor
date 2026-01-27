@@ -16,15 +16,15 @@ export function DeletePostButton({ id }: { id: string }) {
         setIsDeleting(true);
         try {
           await deletePostWithId();
-          toast.success("Post deleted successfully");
+          toast.success("Makale silindi");
         } catch (err) {
-          toast.error("Failed to delete post");
+          toast.error("Makale silinemedi");
         } finally {
           setIsDeleting(false);
         }
       }}
       onSubmit={(e) => {
-        if (!confirm("Are you sure you want to delete this post?")) {
+        if (!confirm("Bu makaleyi silmek istediğinizden emin misiniz?")) {
           e.preventDefault();
         }
       }}

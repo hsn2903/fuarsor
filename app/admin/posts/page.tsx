@@ -76,21 +76,19 @@ export default async function PostsPage({ searchParams }: PostsPageProps) {
           <TableHeader>
             <TableRow>
               <TableHead className="w-[100px]">ID</TableHead>
-              <TableHead>Title</TableHead>
+              <TableHead>Başlık</TableHead>
               <TableHead>Slug</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Category</TableHead>
-              <TableHead className="text-right">Date</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead>Durum</TableHead>
+              <TableHead>Kategori</TableHead>
+              <TableHead className="text-right">Tarih</TableHead>
+              <TableHead className="text-right">İşlemler</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {posts.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={6} className="text-center h-24">
-                  {query
-                    ? "No results found for your search."
-                    : "No posts found."}
+                  {query ? "Arama sonuç bulunamadı." : "Hiç post bulunamadı."}
                 </TableCell>
               </TableRow>
             ) : (
@@ -120,7 +118,9 @@ export default async function PostsPage({ searchParams }: PostsPageProps) {
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
                       <Button variant="ghost" size="sm" asChild>
-                        <Link href={`/admin/blog/${post.id}/edit`}>Edit</Link>
+                        <Link href={`/admin/posts/${post.id}/edit`}>
+                          Düzenle
+                        </Link>
                       </Button>
                       <DeletePostButton id={post.id} />
                     </div>

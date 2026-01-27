@@ -42,7 +42,7 @@ export function PostForm({ post, action }: PostFormProps) {
 
   // State for the image URL (array format because our component expects an array)
   const [imageUrl, setImageUrl] = useState<string[]>(
-    post?.coverImage ? [post.coverImage] : []
+    post?.coverImage ? [post.coverImage] : [],
   );
 
   // 1. State for Content
@@ -83,7 +83,7 @@ export function PostForm({ post, action }: PostFormProps) {
               onChange={(url) => setImageUrl((current) => [...current, url])}
               onRemove={(url) =>
                 setImageUrl((current) =>
-                  current.filter((currentUrl) => currentUrl !== url)
+                  current.filter((currentUrl) => currentUrl !== url),
                 )
               }
             />
@@ -152,7 +152,7 @@ export function PostForm({ post, action }: PostFormProps) {
 
           <div className="flex justify-end gap-4">
             <Button variant="outline" asChild>
-              <Link href="/admin/posts">Cancel</Link>
+              <Link href="/admin/posts">İptal</Link>
             </Button>
             <SubmitButton>
               {post ? "Güncelle" : "Yeni Post Oluştur"}

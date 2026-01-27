@@ -86,7 +86,7 @@ export default function PostsSection({ posts }: { posts: Post[] }) {
                 <div className="absolute top-4 right-4">
                   <Badge
                     variant="secondary"
-                    className="bg-white/90 dark:bg-gray-800/90 shadow-sm"
+                    className="bg-white/90 dark:bg-gray-800/90 shadow-sm rounded-none"
                   >
                     {categories.find((c) => c.id === post.category)?.label ||
                       "Genel"}
@@ -99,7 +99,10 @@ export default function PostsSection({ posts }: { posts: Post[] }) {
                     {post.title}
                   </h3>
                   <p className="text-sm text-gray-600 dark:text-gray-300 mt-2 line-clamp-1">
-                    {post.content && post?.content.slice(0, 100) + "..."}
+                    {/* tiptap html content'i buraya al - sadece yazıyı al */}
+                    {post.content &&
+                      post?.content.slice(0, 100).replace(/<[^>]*>/g, "") +
+                        "..."}
                   </p>
                 </div>
                 <div className="flex items-center justify-between pt-4">

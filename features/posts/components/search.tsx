@@ -31,7 +31,7 @@ export function Search() {
   return (
     <div className="relative w-full max-w-sm">
       <Input
-        placeholder="Search titles..."
+        placeholder="Başlık ara..."
         defaultValue={searchParams.get("search")?.toString()}
         onChange={(e) => handleSearch(e.target.value)}
         className="max-w-sm"
