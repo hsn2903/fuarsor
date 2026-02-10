@@ -6,11 +6,29 @@ import { Calendar, Clock, Facebook, Instagram, Twitter } from "lucide-react";
 import Link from "next/link";
 import { getPostBySlug } from "@/features/posts/actions";
 import ContactForm from "@/components/shared/contact-form";
+import prisma from "@/lib/prisma";
 
 export const metadata = {
   title: "Blog",
 };
 
+export const generateMetadata = async ({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) => {
+  const blogSlug = (await params).slug;
+
+  const post = await prisma.post.findFirst({
+    where: { slug: blogSlug },
+  });
+
+  return {
+    title: post?.title,
+    // Join the array into a string for the meta description
+    description: post?.content,
+  };
+};
 const BlogDetailPage = async ({
   params,
 }: {
