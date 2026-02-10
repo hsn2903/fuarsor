@@ -1,7 +1,6 @@
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TabsContent } from "@radix-ui/react-tabs";
 import MessagesTable from "./_components/messages-table";
-import prisma from "@/lib/prisma";
 import { getAllMessages } from "@/app/_actions/contact";
 
 const MessagesPage = async () => {
