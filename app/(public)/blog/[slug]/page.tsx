@@ -8,10 +8,6 @@ import { getPostBySlug } from "@/features/posts/actions";
 import ContactForm from "@/components/shared/contact-form";
 import prisma from "@/lib/prisma";
 
-export const metadata = {
-  title: "Blog",
-};
-
 export const generateMetadata = async ({
   params,
 }: {
