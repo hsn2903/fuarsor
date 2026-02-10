@@ -4,6 +4,11 @@ import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 // import { z } from "zod";
 
+export const getAllMessages = async () => {
+  const messages = await prisma.message.findMany();
+  return messages;
+};
+
 export const sendMessage = async (prevState: unknown, formData: FormData) => {
   const name = formData.get("name") as string;
   const email = formData.get("email") as string;
@@ -22,7 +27,7 @@ export const sendMessage = async (prevState: unknown, formData: FormData) => {
       },
     });
 
-    revalidatePath("/dashboard/messages");
+    revalidatePath("/admin/messages");
     return {
       message: "Mesajınız iletildi. En kısa sürede dönüş yapılacaktır.",
     };
@@ -46,7 +51,7 @@ export async function markMessageAsRead(formData: FormData) {
     });
 
     // Revalidate the current path to refresh the data
-    revalidatePath("/dashboard/messages");
+    revalidatePath("/admin/messages");
   } catch (error) {
     console.error("Error marking message as read:", error);
   }
@@ -66,7 +71,7 @@ export async function markMessageAsUnread(formData: FormData) {
     });
 
     // Revalidate the current path to refresh the data
-    revalidatePath("/dashboard/messages");
+    revalidatePath("/admin/messages");
   } catch (error) {
     console.error("Error marking message as unread:", error);
   }
@@ -85,7 +90,7 @@ export async function deleteMessage(formData: FormData) {
     });
 
     // Revalidate the current path to refresh the data
-    revalidatePath("/dashboard/messages");
+    revalidatePath("/admin/messages");
   } catch (error) {
     console.error("Error deleting message:", error);
   }
