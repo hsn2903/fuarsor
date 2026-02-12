@@ -82,6 +82,7 @@ const FuarDetayPage = async ({
 
   return (
     <main className="min-h-screen">
+      {/* Header Section */}
       <div className="bg-gray-800 w-full h-40 flex justify-center items-center relative">
         <div className="">
           {/* Added fallback for logoUrl since it is optional in schema */}
@@ -99,6 +100,7 @@ const FuarDetayPage = async ({
 
       <div className="flex flex-col lg:flex-row gap-8 px-4 lg:px-20">
         <div className="lg:w-2/3 flex flex-col gap-12 mb-20">
+          {/* Basic Information Section */}
           <div className="flex flex-col gap-4 py-12">
             <h2 className="text-4xl font-bold text-primary/80">{fair.name}</h2>
             <p>{fair.description}</p>
@@ -115,7 +117,7 @@ const FuarDetayPage = async ({
                 </div>
               )}
 
-              {/* Date Section - Fixed syntax error */}
+              {/* Date Section */}
               <div className="flex items-center group gap-2">
                 <FaCalendarAlt className="text-gray-500 text-xl group-hover:text-gray-700 transition-colors" />
                 <div className="text-gray-700 ml-2 font-medium flex items-center gap-2">
@@ -187,7 +189,7 @@ const FuarDetayPage = async ({
           <ServicesSection />
           <TurProgramlari />
           <HotelsSection hotel={fair.hotel} />
-          <FairImagesSection venue={fair?.venue || "Belirtilmemiş"} />
+          <FairImagesSection fairGallery={fair.fairGallery} />
 
           <div className="" id="fuar-haritası">
             <div>

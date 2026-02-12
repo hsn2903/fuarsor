@@ -7,7 +7,7 @@ import "yet-another-react-lightbox/styles.css";
 import Image from "next/image";
 import SectionTitle from "./section-title";
 
-const FairImagesSection = ({ venue }: { venue: string }) => {
+const FairImagesSection = ({ fairGallery }: { fairGallery: any }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [photoIndex, setPhotoIndex] = useState(0);
 
@@ -16,24 +16,29 @@ const FairImagesSection = ({ venue }: { venue: string }) => {
     setIsOpen(true);
   };
 
-  const fairImages = {
-    images: [
-      "/images/fair-image-1.jpg",
-      "/images/fair-image-2.jpg",
-      "/images/fair-image-3.jpg",
-      "/images/fair-image-4.jpg",
-    ],
-  };
+  console.log("fairGallery", fairGallery);
+
+  const fairImages = fairGallery?.imageUrls || [];
+  // const fairImages = {
+  //   images: [
+  //     "/images/fair-image-1.jpg",
+  //     "/images/fair-image-2.jpg",
+  //     "/images/fair-image-3.jpg",
+  //     "/images/fair-image-4.jpg",
+  //   ],
+  // };
 
   return (
     <>
       <div className=" bg-white dark:bg-gray-800" id="fuar-resimleri">
         <SectionTitle title="Fuar Resimleri" />
         <div>
-          <p className="text-gray-600 dark:text-gray-300 mb-4">{venue}</p>
+          <p className="text-gray-600 dark:text-gray-300 mb-4">
+            {fairGallery?.venue}
+          </p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {fairImages.images.map((img, index) => (
+            {fairImages.map((img: string, index: number) => (
               <div
                 key={index}
                 className="relative group cursor-pointer overflow-hidden rounded-sm"
@@ -57,7 +62,7 @@ const FairImagesSection = ({ venue }: { venue: string }) => {
           open={isOpen}
           close={() => setIsOpen(false)}
           index={photoIndex}
-          slides={fairImages.images.map((src) => ({ src }))}
+          slides={fairImages.map((src: string) => ({ src }))}
         />
       )}
     </>
