@@ -181,7 +181,7 @@ function TourProgramCard({ tourProgram }: { tourProgram: any }) {
               className="p-4 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors duration-200"
             >
               <div className="grid grid-cols-[20px_100px_1fr] gap-4">
-                <div className="flex-shrink-0 mt-1">
+                <div className="shrink-0 mt-1">
                   <MapPin
                     className="text-gray-400 dark:text-gray-500"
                     size={18}

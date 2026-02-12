@@ -10,11 +10,12 @@ import {
 } from "react-icons/fa";
 import ServicesSection from "./_components/services";
 import HotelsSection from "./_components/hotels-section";
-import TurProgramlari from "./_components/tour-programs";
+// import TurProgramlari from "./_components/tour-programs";
 import FairImagesSection from "./_components/fair-images-section";
 import ImageGalleryButton from "./_components/image-gallery-button";
 import SectionTitle from "./_components/section-title";
 import ContactForm from "@/components/shared/contact-form";
+import TourPackages from "./_components/tour-packages";
 
 export const generateMetadata = async ({
   params,
@@ -60,6 +61,11 @@ const FuarDetayPage = async ({
       fairGallery: true,
       tourGallery: true,
       venueGallery: true,
+      packages: {
+        include: {
+          activities: true,
+        },
+      },
     },
   });
 
@@ -187,13 +193,15 @@ const FuarDetayPage = async ({
           </div>
 
           <ServicesSection />
-          <TurProgramlari />
+          <TourPackages tourPackages={fair.packages} />
+          {/* <TurProgramlari /> */}
           <HotelsSection hotel={fair.hotel} />
           <FairImagesSection fairGallery={fair.fairGallery} />
 
-          <div className="" id="fuar-haritası">
+          {/* Tur Haritası */}
+          <div className="" id="tur-haritası">
             <div>
-              <SectionTitle title="Fuar Haritası" />
+              <SectionTitle title="Tur Haritası" />
 
               <div className="w-full h-96 mt-4">
                 <iframe
