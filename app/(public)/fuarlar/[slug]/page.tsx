@@ -57,7 +57,6 @@ const FuarDetayPage = async ({
     where: { slug: fairSlug },
     include: {
       hotel: true,
-      // Updated relations according to new Schema
       fairGallery: true,
       tourGallery: true,
       venueGallery: true,
@@ -161,7 +160,7 @@ const FuarDetayPage = async ({
             </div>
           </div>
 
-          {/* Products Section - Updated for String Array */}
+          {/* Products Section */}
           <div>
             <SectionTitle title="Sergilenen Ürünler" />
 
@@ -187,7 +186,7 @@ const FuarDetayPage = async ({
 
           <ServicesSection />
           <TurProgramlari />
-          <HotelsSection />
+          <HotelsSection hotel={fair.hotel} />
           <FairImagesSection venue={fair?.venue || "Belirtilmemiş"} />
 
           <div className="" id="fuar-haritası">

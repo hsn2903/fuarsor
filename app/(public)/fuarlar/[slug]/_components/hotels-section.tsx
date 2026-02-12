@@ -2,23 +2,23 @@
 "use client";
 
 import React, { useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
 import Lightbox from "yet-another-react-lightbox";
 import "yet-another-react-lightbox/styles.css";
 import SectionTitle from "./section-title";
 import Image from "next/image";
+import { Hotel } from "@/app/generated/prisma/client";
 
-const HotelsSection = () => {
+const HotelsSection = ({ hotel }: { hotel: any }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [photoIndex, setPhotoIndex] = useState(0);
 
-  // const hotelImages = hotel.images;
-  const hotelImages = [
-    "/images/hotel-1.jpg",
-    "/images/hotel-2.jpg",
-    "/images/hotel-3.jpg",
-    "/images/hotel-4.jpg",
-  ];
+  const hotelImages = hotel?.imageUrls || [];
+  // const hotelImages = [
+  //   "/images/hotel-1.jpg",
+  //   "/images/hotel-2.jpg",
+  //   "/images/hotel-3.jpg",
+  //   "/images/hotel-4.jpg",
+  // ];
 
   const openLightbox = (index: React.SetStateAction<number>) => {
     setPhotoIndex(index);
@@ -30,16 +30,14 @@ const HotelsSection = () => {
       <div id="otel-resimleri">
         <SectionTitle title="Otel Resimleri" />
         <div className="">
-          <h2>{/* {hotel.name} */} Otel Çin</h2>
+          <h2>{hotel.name}</h2>
 
           <p className="text-gray-600 dark:text-gray-300 mb-6">
-            {/* {hotel.description} */} Lorem ipsum dolor sit amet consectetur
-            adipisicing elit. Voluptas natus libero alias adipisci ullam autem
-            in impedit dolores beatae eius?
+            {hotel.description}
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {hotelImages.map((img, index) => (
+            {hotelImages.map((img: string, index: number) => (
               <div
                 key={index}
                 className="relative group cursor-pointer overflow-hidden rounded-sm"
@@ -63,7 +61,7 @@ const HotelsSection = () => {
           open={isOpen}
           close={() => setIsOpen(false)}
           index={photoIndex}
-          slides={hotelImages.map((src) => ({ src }))}
+          slides={hotelImages.map((src: string) => ({ src }))}
         />
       )}
     </>
