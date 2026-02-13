@@ -55,7 +55,7 @@ export default async function EditFairPage({ params }: EditFairPageProps) {
       <FairForm
         hotelOptions={hotels}
         galleryOptions={galleries}
-        initialData={fair} // <--- The magic prop
+        initialData={fair}
       />
     </div>
   );

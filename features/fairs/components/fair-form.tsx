@@ -70,13 +70,13 @@ export default function FairForm({
 
   // Tags
   const [products, setProducts] = useState<string[]>(
-    initialData?.products || []
+    initialData?.products || [],
   );
   const [services, setServices] = useState<string[]>(
-    initialData?.services || []
+    initialData?.services || [],
   );
   const [freeServices, setFreeServices] = useState<string[]>(
-    initialData?.freeServices || []
+    initialData?.freeServices || [],
   );
 
   // Packages (Transform DB Data to UI State)
@@ -94,14 +94,14 @@ export default function FairForm({
           description: act.description,
         }))
         .sort((a, b) => a.dayNumber - b.dayNumber),
-    })) || []
+    })) || [],
   );
 
   // Helper for Tag Inputs
   const handleAddTag = (
     e: React.KeyboardEvent<HTMLInputElement>,
     list: string[],
-    setList: Function
+    setList: Function,
   ) => {
     if (e.key === "Enter") {
       e.preventDefault(); // Stop form submission
@@ -275,6 +275,7 @@ export default function FairForm({
           </div>
         </div>
 
+        {/* Açıklama */}
         <div className="space-y-2">
           <Label htmlFor="description">Genel Açıklama</Label>
           <Textarea
@@ -292,6 +293,7 @@ export default function FairForm({
           )}
         </div>
 
+        {/* Kısa Özet */}
         <div className="space-y-2">
           <Label htmlFor="summary">Kısa Özet (Opsiyonel)</Label>
           <Textarea
@@ -365,7 +367,7 @@ export default function FairForm({
 
       <hr />
 
-      {/* --- SECTION 3: RELATIONS (Dropdowns) --- */}
+      {/* --- SECTION 3: Otel, Fuar Alanı, Galeri --- */}
       <div className="space-y-4">
         <h3 className="text-lg font-medium">Bağlantılar</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

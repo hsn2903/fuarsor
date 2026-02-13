@@ -6,10 +6,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Trash2, MapPin } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 
-// Reuse the type we defined in FairForm
-// (In a real app, you might export this from a shared types file)
 type PackageState = {
   tempId: number;
   name: string;
@@ -56,10 +54,10 @@ export default function PackageManager({
   const updatePackage = (
     tempId: number,
     field: keyof PackageState,
-    value: any
+    value: any,
   ) => {
     onChange(
-      packages.map((p) => (p.tempId === tempId ? { ...p, [field]: value } : p))
+      packages.map((p) => (p.tempId === tempId ? { ...p, [field]: value } : p)),
     );
   };
 
@@ -78,7 +76,7 @@ export default function PackageManager({
             { dayNumber: nextDay, description: "" },
           ],
         };
-      })
+      }),
     );
   };
 
@@ -92,7 +90,7 @@ export default function PackageManager({
           .map((act, idx) => ({ ...act, dayNumber: idx + 1 }));
 
         return { ...p, activities: newActivities };
-      })
+      }),
     );
   };
 
@@ -103,7 +101,7 @@ export default function PackageManager({
         const newActivities = [...p.activities];
         newActivities[index].description = text;
         return { ...p, activities: newActivities };
-      })
+      }),
     );
   };
 
@@ -174,32 +172,44 @@ export default function PackageManager({
                   />
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-xs">Tek Kişilik Fiyat (€)</Label>
+                  <Label className="text-xs">Açıklama</Label>
                   <Input
-                    type="number"
-                    value={pkg.priceSingle}
+                    value={pkg.description}
                     onChange={(e) =>
-                      updatePackage(
-                        pkg.tempId,
-                        "priceSingle",
-                        parseFloat(e.target.value)
-                      )
+                      updatePackage(pkg.tempId, "description", e.target.value)
                     }
+                    placeholder="Örn: İstanbul - Şanghay uçuşu ve otele transfer."
                   />
                 </div>
-                <div className="space-y-1">
-                  <Label className="text-xs">Çift Kişilik Fiyat (€)</Label>
-                  <Input
-                    type="number"
-                    value={pkg.priceDouble}
-                    onChange={(e) =>
-                      updatePackage(
-                        pkg.tempId,
-                        "priceDouble",
-                        parseFloat(e.target.value)
-                      )
-                    }
-                  />
+                <div className="flex justify-start items-center col-span-3 gap-10 w-full">
+                  <div className="space-y-1 w-1/2">
+                    <Label className="text-xs">Tek Kişilik Fiyat (€)</Label>
+                    <Input
+                      type="number"
+                      value={pkg.priceSingle}
+                      onChange={(e) =>
+                        updatePackage(
+                          pkg.tempId,
+                          "priceSingle",
+                          parseFloat(e.target.value),
+                        )
+                      }
+                    />
+                  </div>
+                  <div className="space-y-1 w-1/2">
+                    <Label className="text-xs">Çift Kişilik Fiyat (€)</Label>
+                    <Input
+                      type="number"
+                      value={pkg.priceDouble}
+                      onChange={(e) =>
+                        updatePackage(
+                          pkg.tempId,
+                          "priceDouble",
+                          parseFloat(e.target.value),
+                        )
+                      }
+                    />
+                  </div>
                 </div>
               </div>
 
