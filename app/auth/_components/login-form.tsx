@@ -31,7 +31,7 @@ const LoginForm = () => {
         },
         onSuccess: (ctx) => {
           setLoading(false);
-          toast.success("User signed in successfully");
+          toast.success("Başarıyla giriş yapıldı");
           router.push("/admin");
         },
         onError: (ctx) => {
@@ -53,19 +53,19 @@ const LoginForm = () => {
       <Input
         type="password"
         name="password"
-        placeholder="Password"
+        placeholder="Şifre"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
       />
       <Button type="submit" disabled={loading}>
-        {loading ? "Signing in..." : "Sign In"}
+        {loading ? "Giriş yapılıyor..." : "Giriş Yap"}
       </Button>
 
       <div className="flex items-center">
-        <p>Don't have an account?</p>
+        <p>Hesabınız yok mu?</p>
         <Link href="/auth/register">
           <Button variant="link" size="sm">
-            Register
+            Kayıt Ol
           </Button>
         </Link>
       </div>

@@ -578,7 +578,7 @@ export default function FairForm({
 
       <hr />
 
-      {/* --- SECTION 6: PACKAGES (Nested Form) --- */}
+      {/* --- SECTION 6: PACKAGES --- */}
       <PackageManager packages={packages} onChange={setPackages} />
 
       {/* --- SUBMIT --- */}

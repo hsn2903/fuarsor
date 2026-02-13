@@ -51,7 +51,7 @@ const RegisterForm = () => {
         type="text"
         value={name}
         onChange={(e) => setName(e.target.value)}
-        placeholder="Name"
+        placeholder="Ad Soyad"
       />
       <Input
         type="email"
@@ -63,18 +63,18 @@ const RegisterForm = () => {
         type="password"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
-        placeholder="Password"
+        placeholder="Şifre"
       />
 
       <Button type="submit" disabled={loading}>
-        Register
+        Kayıt Ol
       </Button>
 
       <div className="flex items-center">
-        <p>Already have an account?</p>
+        <p>Hesabınız var mı?</p>
         <Link href="/auth/login">
           <Button variant="link" size="sm">
-            Login
+            Giriş Yap
           </Button>
         </Link>
       </div>

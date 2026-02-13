@@ -17,14 +17,14 @@ export default async function EditFairPage({ params }: EditFairPageProps) {
     where: { id },
     include: {
       packages: {
-        include: { activities: true }, // We need activities too
-        orderBy: { priceSingle: "asc" }, // Optional sort
+        include: { activities: true },
+        orderBy: { priceSingle: "asc" },
       },
     },
   });
 
   if (!fair) {
-    notFound(); // Returns a 404 page
+    notFound();
   }
 
   // 2. Fetch Options for Dropdowns
