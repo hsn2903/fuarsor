@@ -26,11 +26,9 @@ const RegisterForm = () => {
       },
       {
         onRequest: (ctx) => {
-          //show loading
           setLoading(true);
         },
         onSuccess: (ctx) => {
-          //redirect to the profile or sign in page
           setLoading(false);
           toast.success("Hesabınız oluşturuldu.");
           router.push("/auth/login");

@@ -33,7 +33,7 @@ export default function AdminSidebar() {
             <Plane className="h-5 w-5 text-blue-600" />
           </div>
           <h1 className="text-xl font-bold">
-            Fair<span className="text-blue-500">Manager</span>
+            Fuarlar<span className="text-blue-500">ım</span>
           </h1>
         </Link>
 
