@@ -1,8 +1,7 @@
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { CalendarDays } from "lucide-react";
 import SectionTitle from "./section-title";
+import { Fair } from "@/app/generated/prisma/client";
 
-const ServicesSection = () => {
+const ServicesSection = ({ fair }: { fair: Fair }) => {
   // Sample data
   const sampleData = {
     freeServices:

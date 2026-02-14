@@ -1,4 +1,3 @@
-import { getAllFairs } from "@/app/_actions/fairs";
 import prisma from "@/lib/prisma";
 import Image from "next/image";
 import {
@@ -88,7 +87,7 @@ const FuarDetayPage = async ({
 
   return (
     <main className="min-h-screen">
-      {/* Header Section */}
+      {/* Header  */}
       <div className="bg-gray-800 w-full h-40 flex justify-center items-center relative">
         <div className="">
           {/* Added fallback for logoUrl since it is optional in schema */}
@@ -106,7 +105,7 @@ const FuarDetayPage = async ({
 
       <div className="flex flex-col lg:flex-row gap-8 px-4 lg:px-20">
         <div className="lg:w-2/3 flex flex-col gap-12 mb-20">
-          {/* Basic Information Section */}
+          {/* Temel Bilgiler */}
           <div className="flex flex-col gap-4 py-12">
             <h2 className="text-4xl font-bold text-primary/80">{fair.name}</h2>
             <p>{fair.description}</p>
@@ -168,7 +167,7 @@ const FuarDetayPage = async ({
             </div>
           </div>
 
-          {/* Products Section */}
+          {/* Sergilenen Ürünler */}
           <div>
             <SectionTitle title="Sergilenen Ürünler" />
 
@@ -192,7 +191,9 @@ const FuarDetayPage = async ({
             </section>
           </div>
 
-          <ServicesSection />
+          {/* Hizmetler */}
+          <ServicesSection fair={fair} />
+
           <TourPackages tourPackages={fair.packages} />
           {/* <TurProgramlari /> */}
           <HotelsSection hotel={fair.hotel} />
